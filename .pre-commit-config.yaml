@@ -1,0 +1,33 @@
+# Lists of repositories that are sourses for hooks, used by pre-commit framework
+repos:
+  # URL of the repository, where hooks are located
+  - repo: https://github.com/pocc/pre-commit-hooks
+    # Version to be used
+    rev: v1.3.5 # This is the most recent ver of the repo
+    # List of hooks from the repo and their attributes
+    hooks:
+      - id: cppcheck
+        files: \.(cpp|h)$ # Tells the hook to check only files with .cpp and .h
+      - id: oclint
+        files: \.(cpp|h)$
+  - repo: https://github.com/bufbuild/buf
+    rev: v1.66.1
+    hooks:
+      - id: buf-lint
+      - id: buf-format
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        exclude: \.md$ # Exclude .md files from this hook because it can mess them up
+      - id: check-added-large-files
+        args: [--maxkb=500] # Sets the limit of file size to 500KB
+      - id: check-merge-conflict
+      - id: detect-private-key
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: [--baseline, .secrets.baseline] # Creates a whitelist file to avoid false positives/known secrets
