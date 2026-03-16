@@ -19,6 +19,7 @@ repos:
     rev: v6.0.0
     hooks:
       - id: check-yaml
+      - id: check-json
       - id: end-of-file-fixer
       - id: trailing-whitespace
         exclude: \.md$ # Exclude .md files from this hook because it can mess them up
@@ -31,3 +32,16 @@ repos:
     hooks:
       - id: detect-secrets
         args: [--baseline, .secrets.baseline] # Creates a whitelist file to avoid false positives/known secrets
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: Rust formatter (cargo fmt) # Required for local hooks, specifies the name of the hook
+        entry: cargo fmt -- # Required for local hooks, specifies the command to run
+        language: system # Required for local hooks, specifies the language environment
+        files: \.rs$
+      - id: cargo-clippy
+        name: Rust linter (cargo clippy)
+        entry: cargo clippy -- -D warnings
+        language: system
+        files: \.rs$
+        pass_filenames: false
