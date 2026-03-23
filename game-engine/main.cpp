@@ -2,10 +2,10 @@
 #include <thread>
 #include <chrono>
 
-#include "services/ResourceManager.h"
-#include "services/PetitionManager.h"
-#include "services/GameService.h"
-#include "domain/City.h"
+#include "services/ResourceManager.hpp"
+#include "services/PetitionManager.hpp"
+#include "services/GameService.hpp"
+#include "domain/City.hpp"
 
 int main() {
     ResourceManager resourceManager;

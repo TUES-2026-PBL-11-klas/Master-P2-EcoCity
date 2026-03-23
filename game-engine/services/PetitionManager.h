@@ -1,4 +1,0 @@
-#ifndef PETITION_MANAGER_H
-#define PETITION_MANAGER_H
-
-#endif
