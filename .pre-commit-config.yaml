@@ -7,7 +7,13 @@ repos:
     # List of hooks from the repo and their attributes
     hooks:
       - id: cppcheck
-        files: \.(cpp|h)$ # Tells the hook to check only files with .cpp and .h
+        files: \.(cpp|hpp)$ # Tells the hook to check only files with .cpp and .hpp
+        args:
+          - "--language=c++"
+          - "--std=c++17"
+          - "--suppress=unusedStructMember" # REMOVE later
+          - "--suppress=missingIncludeSystem"
+          - "--enable=warning,performance,portability"
   - repo: https://github.com/bufbuild/buf
     rev: v1.66.1
     hooks:

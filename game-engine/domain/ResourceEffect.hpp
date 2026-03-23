@@ -1,11 +1,11 @@
 #ifndef RESOURCE_EFFECT_H
 #define RESOURCE_EFFECT_H
 
-#include "ResourceType.h"
+#include "ResourceType.hpp"
 
 struct ResourceEffect {
     ResourceType type;
-    int amount;
+    int deltaValue;
 };
 
 #endif
