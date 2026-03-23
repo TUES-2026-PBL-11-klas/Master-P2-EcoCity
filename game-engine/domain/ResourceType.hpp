@@ -8,4 +8,5 @@ enum ResourceType{
     POPULATION,
     CO2
 };
+
 #endif
