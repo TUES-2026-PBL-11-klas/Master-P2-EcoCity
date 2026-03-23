@@ -14,7 +14,7 @@ class GameService {
         GameService(ResourceManager* resourceManager, PetitionManager* petitionManager, City* city);
         bool tick();
         void readPlayerInput();
-        void checkGameOver();
+        bool checkGameOver();
 };
 
 #endif
