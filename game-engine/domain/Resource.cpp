@@ -28,4 +28,8 @@ class Resource {
         {
             this->deltaPerTick += delta;
         }
+        void setCurrentValue(int value)
+        {
+            this->currentValue = value;
+        }
 };

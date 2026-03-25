@@ -16,6 +16,7 @@ class Resource {
         int getCurrentValue() const;
         int getDeltaValue() const;
         void changeDeltaPerTick(int delta);
+        void setCurrentValue(int value);
 };
 
 #endif
