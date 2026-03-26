@@ -9,6 +9,7 @@
 class PetitionManager {
     private:
         int petitionCount;
+        std::vector<Petition*> underConstructionPetitions;
     public:
         PetitionManager();
         void tick();
