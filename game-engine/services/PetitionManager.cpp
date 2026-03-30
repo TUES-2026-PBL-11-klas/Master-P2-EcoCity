@@ -13,15 +13,14 @@ class PetitionManager {
             petitionCount = 0;
             underConstructionPetitions.clear();
         }
-        void tick()
+        std::vector<ResourceEffect> tick()
         {
             std::vector<Petition*> petitionsToRemove;
+            std::vector<ResourceEffect> completedEffects;
             for (auto& petition : underConstructionPetitions) {
                 petition->decreaseTicksToComplete();
                 if(petition->getTicksToComplete() <= 0){
-                    petition->getEffects();//this needs logic to be finished
-                    // Currently, we just remove the petition from the list when it's completed.
-                    // In a real implementation, we would also return the effects to the caller
+                    completedEffects.insert(completedEffects.end(), petition->getEffects().begin(), petition->getEffects().end());
                     petitionsToRemove.push_back(petition);
                 }
             }
@@ -32,8 +31,9 @@ class PetitionManager {
                     underConstructionPetitions.end()
                 );
             }
+            
+            return completedEffects;
         }
-        std::vector<ResourceEffect> getEffects(int id);
         void generatePetition();
         void removePetition(int id);
         void addPetition(Petition* petition);

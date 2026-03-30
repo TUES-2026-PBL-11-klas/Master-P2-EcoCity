@@ -12,8 +12,7 @@ class PetitionManager {
         std::vector<Petition*> underConstructionPetitions;
     public:
         PetitionManager();
-        void tick();
-        std::vector<ResourceEffect> getEffects(int id);
+        std::vector<ResourceEffect> tick();
         void generatePetition();
         void removePetition(int id);
         void addPetition(Petition* petition);
