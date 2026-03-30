@@ -15,9 +15,27 @@ class Building {
 
     public:
         Building(enum BuildingType type, int buildCost, int ticksToComplete, std::vector<ResourceEffect> effects);
-        enum BuildingType getType() const;
-        int getBuildCost() const;
-        int getTicksToComplete() const;
+
+        enum BuildingType getType() const
+        {
+            return type;
+        };
+
+        int getBuildCost() const
+        {
+            return buildCost;
+        };
+
+        int getTicksToComplete() const
+        {
+            return ticksToComplete;
+        };
+
+        void changeTicksToComplete(int ticks)
+        {
+            ticksToComplete += ticks;
+        };
+
         virtual std::vector<ResourceEffect> applyEffects() const = 0;
 };
 
