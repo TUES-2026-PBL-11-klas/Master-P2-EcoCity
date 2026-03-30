@@ -1,4 +1,5 @@
 #include "ResourceType.hpp"
+#include "Resource.hpp"
 
 class Resource {
     private:
@@ -7,11 +8,8 @@ class Resource {
         int deltaPerTick;
     public:
         Resource(ResourceType type, int amount, int deltaPerTick)
-        {
-            this->type = type;
-            this->currentValue = amount;
-            this->deltaPerTick = deltaPerTick;
-        }
+        : type(type), currentValue(amount), deltaPerTick(deltaPerTick) {}
+
         ResourceType getType() const
         {
             return this->type;
@@ -28,8 +26,16 @@ class Resource {
         {
             this->deltaPerTick += delta;
         }
-        void setCurrentValue(int value)
+        bool changeCurrentValue()
         {
-            this->currentValue = value;
+            this->currentValue += this->deltaPerTick;
+            if (this->currentValue < 0) {
+                this->currentValue = 0;
+                return true; // Game over
+            }
+            if (this->currentValue > MAX_RESOURCE_VALUE) {
+                this->currentValue = MAX_RESOURCE_VALUE;
+            }
+            return false;
         }
 };

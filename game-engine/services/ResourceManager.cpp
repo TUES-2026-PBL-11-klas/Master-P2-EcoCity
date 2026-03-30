@@ -16,15 +16,16 @@ class ResourceManager {
             money(ResourceType::MONEY, 10000000, 10),
             population(ResourceType::POPULATION, 100, 10)
         {}
-        
+
         void tick()
         {
-            water.setCurrentValue(water.getCurrentValue() - water.getDeltaValue());
-            energy.setCurrentValue(energy.getCurrentValue() - energy.getDeltaValue());
-            co2.setCurrentValue(co2.getCurrentValue() - co2.getDeltaValue());
-            money.setCurrentValue(money.getCurrentValue() - money.getDeltaValue());
-            population.setCurrentValue(population.getCurrentValue() - population.getDeltaValue());
+            bool gameOver = false;
+            if(water.changeCurrentValue() || energy.changeCurrentValue() || co2.changeCurrentValue()
+                || money.changeCurrentValue() || population.changeCurrentValue()) {
+                    gameOver = true;
+                }
         }
+
         void applyEffect(struct ResourceEffect effect)
         {
             switch (effect.type)
@@ -48,6 +49,7 @@ class ResourceManager {
                 break;
             }
         }
+
         int getResourceValue(enum ResourceType type)
         {
             switch (type)

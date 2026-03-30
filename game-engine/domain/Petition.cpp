@@ -22,15 +22,15 @@ class Petition{
         {
             return building->getTicksToComplete();
         }
-        const std::vector<ResourceEffect>& getEffects() const
+        const std::vector<ResourceEffect> getEffects() const
         {
             return building->applyEffects();
         }
         int getId() const{
             return id;
         }
-        void changeTicksToComplete(int ticks)
+        void decreaseTicksToComplete()
         {
-            building->changeTicksToComplete(ticks);
+            building->changeTicksToComplete(-1);
         }
 };

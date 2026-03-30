@@ -3,7 +3,7 @@
 
 #include "ResourceType.hpp"
 
-#define MAX_RESOURCE_VALUE 65536;
+#define MAX_RESOURCE_VALUE 65536
 
 class Resource {
     private:
@@ -16,7 +16,7 @@ class Resource {
         int getCurrentValue() const;
         int getDeltaValue() const;
         void changeDeltaPerTick(int delta);
-        void setCurrentValue(int value);
+        bool changeCurrentValue();
 };
 
 #endif

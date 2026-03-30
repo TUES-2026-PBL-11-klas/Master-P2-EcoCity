@@ -1,4 +1,0 @@
-#ifndef POPULATION_MANAGER_H
-#define POPULATION_MANAGER_H
-
-#endif

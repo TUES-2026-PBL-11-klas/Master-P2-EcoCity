@@ -14,6 +14,7 @@ repos:
           - "--suppress=unusedStructMember" # REMOVE later
           - "--suppress=missingIncludeSystem"
           - "--enable=warning,performance,portability"
+          - "--suppress=uninitMemberVar:game-engine/domain/Resource.cpp" # False positive
   - repo: https://github.com/bufbuild/buf
     rev: v1.66.1
     hooks:

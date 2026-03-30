@@ -15,7 +15,7 @@ class Petition{
         Petition(int id, Building* building);
         int getCost() const;
         int getTicksToComplete() const;
-        void changeTicksToComplete(int ticks);
+        void decreaseTicksToComplete(int ticks);
         const std::vector<ResourceEffect>& getEffects() const;
         int getId() const;
 };
