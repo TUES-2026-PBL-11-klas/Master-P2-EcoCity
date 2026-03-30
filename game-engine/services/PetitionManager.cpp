@@ -2,6 +2,7 @@
 #include "domain/ResourceEffect.hpp"
 #include "domain/ResourceType.hpp"
 #include "domain/Petition.hpp"
+#include "services/PetitionManager.hpp"
 
 class PetitionManager {
     private:
