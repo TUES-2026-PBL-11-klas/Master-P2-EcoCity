@@ -1,6 +1,7 @@
 #ifndef RESOURCE_MANAGER_H
 #define RESOURCE_MANAGER_H
 
+#include <vector>
 #include <array>
 #include "domain/Resource.hpp"
 #include "domain/ResourceEffect.hpp"
@@ -15,7 +16,7 @@ class ResourceManager {
 
         ResourceManager();
         bool tick();
-        void applyEffect(struct ResourceEffect effect);
+        void applyEffect(const std::vector<ResourceEffect>& effects);
         int getResourceValue(enum ResourceType type);
 };
 
