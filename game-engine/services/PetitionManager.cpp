@@ -2,40 +2,63 @@
 #include "domain/ResourceEffect.hpp"
 #include "domain/ResourceType.hpp"
 #include "domain/Petition.hpp"
-#include "services/PetitionManager.hpp"
+#include "PetitionManager.hpp"
 
-class PetitionManager {
-    private:
-        int petitionCount;
-        std::vector<Petition*> underConstructionPetitions;
-    public:
-        PetitionManager()
-        {
-            petitionCount = 0;
-            underConstructionPetitions.clear();
-        }
-        void tick()
-        {
-            std::vector<Petition*> petitionsToRemove;
-            for (auto& petition : underConstructionPetitions) {
-                petition->decreaseTicksToComplete();
-                if(petition->getTicksToComplete() <= 0){
-                    petition->getEffects();//this needs logic to be finished
-                    // Currently, we just remove the petition from the list when it's completed.
-                    // In a real implementation, we would also return the effects to the caller
-                    petitionsToRemove.push_back(petition);
-                }
-            }
+PetitionManager::PetitionManager()
+{
+    currentPetition = generatePetition();
+}
 
-            for(auto& petition : petitionsToRemove) {
-                underConstructionPetitions.erase(
-                    std::remove(underConstructionPetitions.begin(), underConstructionPetitions.end(), petition),
-                    underConstructionPetitions.end()
-                );
-            }
+// Returns effects of the completed petitions
+std::vector<ResourceEffect> PetitionManager::tick()
+{
+    std::vector<Petition*> petitionsToRemove;
+    std::vector<ResourceEffect> completedEffects;
+    for (auto& petition : underConstructionPetitions) {
+        std::vector<ResourceEffect> effects = petition->buildTick();
+
+        if(!effects.empty()) {
+            completedEffects.insert(completedEffects.end(), effects.begin(), effects.end());
+            petitionsToRemove.push_back(petition);
         }
-        std::vector<ResourceEffect> getEffects(int id);
-        void generatePetition();
-        void removePetition(int id);
-        void addPetition(Petition* petition);
-};
+    }
+
+    for(auto& petition : petitionsToRemove) {
+        underConstructionPetitions.erase(
+            std::remove(underConstructionPetitions.begin(), underConstructionPetitions.end(), petition),
+            underConstructionPetitions.end()
+        );
+
+        delete petition;
+    }
+
+    return completedEffects; // Could be empty if no petitions completed this tick
+}
+
+void PetitionManager::acceptPetition()
+{
+    if (currentPetition != nullptr)
+    {
+        underConstructionPetitions.push_back(currentPetition);
+        currentPetition = generatePetition();
+    }
+}
+
+void PetitionManager::rejectPetition()
+{
+    if (currentPetition != nullptr)
+    {
+        delete currentPetition;
+        currentPetition = generatePetition();
+    }
+}
+
+Petition* PetitionManager::getCurrentPetition() const
+{
+    return currentPetition;
+}
+
+Petition* PetitionManager::generatePetition() // This needs to be implemented
+{
+    return nullptr; // Placeholder, should return a new Petition based on game logic
+}
