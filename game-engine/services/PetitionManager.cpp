@@ -6,21 +6,26 @@
 class PetitionManager {
     private:
         int petitionCount;
+        Petition* currentPetition;
         std::vector<Petition*> underConstructionPetitions;
+
     public:
         PetitionManager()
         {
             petitionCount = 0;
-            underConstructionPetitions.clear();
+            currentPetition = generatePetition();
         }
+
+        // Returns effects of the completed petitions
         std::vector<ResourceEffect> tick()
         {
             std::vector<Petition*> petitionsToRemove;
             std::vector<ResourceEffect> completedEffects;
             for (auto& petition : underConstructionPetitions) {
-                petition->decreaseTicksToComplete();
-                if(petition->getTicksToComplete() <= 0){
-                    completedEffects.insert(completedEffects.end(), petition->getEffects().begin(), petition->getEffects().end());
+                std::vector<ResourceEffect> effects = petition->buildTick();
+
+                if(!effects.empty()) {
+                    completedEffects.insert(completedEffects.end(), effects.begin(), effects.end());
                     petitionsToRemove.push_back(petition);
                 }
             }
@@ -30,11 +35,35 @@ class PetitionManager {
                     std::remove(underConstructionPetitions.begin(), underConstructionPetitions.end(), petition),
                     underConstructionPetitions.end()
                 );
+
+                delete petition;
             }
-            
-            return completedEffects;
+
+            return completedEffects; // Could be empty if no petitions completed this tick
         }
-        void generatePetition();
-        void removePetition(int id);
-        void addPetition(Petition* petition);
+
+        void acceptPetition()
+        {
+            if (currentPetition != nullptr)
+            {
+                underConstructionPetitions.push_back(currentPetition);
+                currentPetition = generatePetition();
+            }
+        }
+
+        void rejectPetition()
+        {
+            if (currentPetition != nullptr)
+            {
+                delete currentPetition;
+                currentPetition = generatePetition();
+            }
+        }
+
+        Petition* getCurrentPetition() const
+        {
+            return currentPetition;
+        }
+
+        Petition* generatePetition(); // This needs to be implemented
 };

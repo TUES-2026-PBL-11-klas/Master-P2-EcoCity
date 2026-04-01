@@ -14,23 +14,22 @@ class Petition{
             this->id = id;
             this->building = building;
         }
-        int getCost() const
+
+        Building* getBuilding() const
         {
-            return building->getBuildCost();
+            return building;
         }
-        int getTicksToComplete() const
+        int getId() const
         {
-            return building->getTicksToComplete();
-        }
-        const std::vector<ResourceEffect> getEffects() const
-        {
-            return building->applyEffects();
-        }
-        int getId() const{
             return id;
         }
-        void decreaseTicksToComplete()
+
+        // This method will be called by the PetitionManager when ticking petitions.
+        // It will decrease the ticks to complete and return the effects if the petition is completed.
+        // Technically, it can be called by using getBuilding() and then buildTick(), but this is to simplify PetitionManager
+        const std::vector<ResourceEffect> buildTick()
         {
-            building->changeTicksToComplete(-1);
+            return building->buildTick();
         }
+
 };

@@ -9,9 +9,9 @@ class City{
         std::unordered_map<BuildingType, int> buildings;
 
     public:
-        City();//dunno about this
+        City();
         void addBuilding(BuildingType type);
-        int getBuildingCount(BuildingType type) const; // Idk if this is needed, but it could be useful
+        int getBuildingCount(BuildingType type) const;
 };
 
 #endif
