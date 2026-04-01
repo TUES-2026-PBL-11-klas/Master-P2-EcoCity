@@ -8,7 +8,6 @@
 
 class PetitionManager {
     private:
-        int petitionCount;
         Petition* currentPetition;
         std::vector<Petition*> underConstructionPetitions;
 

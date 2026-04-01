@@ -2,34 +2,27 @@
 #include "Building.hpp"
 #include <string>
 #include <vector>
+#include "Petition.hpp"
 
-class Petition{
-    private:
-        int id;
-        Building* building;
+Petition::Petition(int id, Building* building)
+{
+    this->id = id;
+    this->building = building;
+}
 
-    public:
-        Petition(int id, Building* building)
-        {
-            this->id = id;
-            this->building = building;
-        }
+Building* Petition::getBuilding() const
+{
+    return building;
+}
+int Petition::getId() const
+{
+    return id;
+}
 
-        Building* getBuilding() const
-        {
-            return building;
-        }
-        int getId() const
-        {
-            return id;
-        }
-
-        // This method will be called by the PetitionManager when ticking petitions.
-        // It will decrease the ticks to complete and return the effects if the petition is completed.
-        // Technically, it can be called by using getBuilding() and then buildTick(), but this is to simplify PetitionManager
-        const std::vector<ResourceEffect> buildTick()
-        {
-            return building->buildTick();
-        }
-
-};
+// This method will be called by the PetitionManager when ticking petitions.
+// It will decrease the ticks to complete and return the effects if the petition is completed.
+// Technically, it can be called by using getBuilding() and then buildTick(), but this is to simplify PetitionManager
+const std::vector<ResourceEffect> Petition::buildTick()
+{
+    return building->buildTick();
+}
