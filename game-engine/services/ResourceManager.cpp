@@ -1,71 +1,45 @@
 #include "domain/Resource.hpp"
 #include "domain/ResourceEffect.hpp"
+#include "services/ResourceManager.hpp"
 
-class ResourceManager {
-    private:
-        Resource water;
-        Resource energy;
-        Resource co2;
-        Resource money;
-        Resource population;
-    public:
-        ResourceManager()
-            : water(ResourceType::WATER, 1000, 10),
-            energy(ResourceType::ENERGY, 1000, 10),
-            co2(ResourceType::CO2, 0, 10),
-            money(ResourceType::MONEY, 10000000, 10),
-            population(ResourceType::POPULATION, 100, 10)
-        {}
+// Enum order:  WATER=0, ENERGY=1, MONEY=2, POPULATION=3, CO2=4
+// Array must follow the same order:
+ResourceManager::ResourceManager()
+    : resources{
+        Resource(ResourceType::WATER, 1000, 10),        // index 0
+        Resource(ResourceType::ENERGY, 1000, 10),       // index 1
+        Resource(ResourceType::MONEY, 10000000, 10),    // index 2
+        Resource(ResourceType::POPULATION, 100, 10),    // index 3
+        Resource(ResourceType::CO2, 1000, 10)           // index 4
+    }
+    {
+        // Static assertions to ensure enum values match array indices
+        // static_assert checks happen at compile time so there is zero runtime cost
+        static_assert(static_cast<int>(ResourceType::WATER)      == 0, "WATER must be index 0");
+        static_assert(static_cast<int>(ResourceType::ENERGY)     == 1, "ENERGY must be index 1");
+        static_assert(static_cast<int>(ResourceType::MONEY)      == 2, "MONEY must be index 2");
+        static_assert(static_cast<int>(ResourceType::POPULATION) == 3, "POPULATION must be index 3");
+        static_assert(static_cast<int>(ResourceType::CO2)        == 4, "CO2 must be index 4");
+    }
 
-        void tick()
-        {
-            bool gameOver = false;
-            if(water.changeCurrentValue() || energy.changeCurrentValue() || co2.changeCurrentValue()
-                || money.changeCurrentValue() || population.changeCurrentValue()) {
-                    gameOver = true;
-                }
+bool ResourceManager::tick()
+{
+    bool gameOver = false;
+    for(Resource& resource : resources) {
+        if(resource.changeCurrentValue()) {
+            gameOver = true;
+            break;
         }
+    }
+    return gameOver;
+}
 
-        void applyEffect(struct ResourceEffect effect)
-        {
-            switch (effect.type)
-            {
-            case ResourceType::WATER:
-                water.changeDeltaPerTick(effect.deltaValue);
-                break;
-            case ResourceType::ENERGY:
-                energy.changeDeltaPerTick(effect.deltaValue);
-                break;
-            case ResourceType::CO2:
-                co2.changeDeltaPerTick(effect.deltaValue);
-                break;
-            case ResourceType::MONEY:
-                money.changeDeltaPerTick(effect.deltaValue);
-                break;
-            case ResourceType::POPULATION:
-                population.changeDeltaPerTick(effect.deltaValue);
-                break;
-            default:
-                break;
-            }
-        }
+void ResourceManager::applyEffect(const std::vector<ResourceEffect>& effects) {
+    for (const ResourceEffect& effect : effects) {
+        resources[static_cast<int>(effect.type)].changeDeltaPerTick(effect.deltaValue);
+    }
+}
 
-        int getResourceValue(enum ResourceType type)
-        {
-            switch (type)
-            {
-            case ResourceType::WATER:
-                return water.getCurrentValue();
-            case ResourceType::ENERGY:
-                return energy.getCurrentValue();
-            case ResourceType::CO2:
-                return co2.getCurrentValue();
-            case ResourceType::MONEY:
-                return money.getCurrentValue();
-            case ResourceType::POPULATION:
-                return population.getCurrentValue();
-            default:
-                return 0;
-            }
-        }
-};
+int ResourceManager::getResourceValue(ResourceType type) {
+    return resources[static_cast<int>(type)].getCurrentValue();
+}
