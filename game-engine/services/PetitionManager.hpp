@@ -8,14 +8,16 @@
 
 class PetitionManager {
     private:
-        int petitionCount;
+        Petition* currentPetition;
         std::vector<Petition*> underConstructionPetitions;
+
     public:
         PetitionManager();
         std::vector<ResourceEffect> tick();
-        void generatePetition();
-        void removePetition(int id);
-        void addPetition(Petition* petition);
+        void acceptPetition();
+        void rejectPetition();
+        Petition* generatePetition();
+        Petition* getCurrentPetition() const;
 };
 
 #endif
