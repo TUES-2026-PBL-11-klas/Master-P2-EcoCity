@@ -4,6 +4,7 @@
 
 City::City()
 {
+    buildings[UNSPECIFIED] = 0;
     buildings[POWER_PLANT] = 0;
     buildings[WATER_TREATMENT_PLANT] = 0;
     buildings[SOLAR_PANEL_FARM] = 0;

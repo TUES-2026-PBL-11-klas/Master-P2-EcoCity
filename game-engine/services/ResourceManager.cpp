@@ -15,11 +15,11 @@ ResourceManager::ResourceManager()
     {
         // Static assertions to ensure enum values match array indices
         // static_assert checks happen at compile time so there is zero runtime cost
-        static_assert(static_cast<int>(ResourceType::WATER)      == 0, "WATER must be index 0");
-        static_assert(static_cast<int>(ResourceType::ENERGY)     == 1, "ENERGY must be index 1");
-        static_assert(static_cast<int>(ResourceType::MONEY)      == 2, "MONEY must be index 2");
-        static_assert(static_cast<int>(ResourceType::POPULATION) == 3, "POPULATION must be index 3");
-        static_assert(static_cast<int>(ResourceType::CO2)        == 4, "CO2 must be index 4");
+        static_assert(static_cast<int>(ResourceType::WATER)      == 1, "WATER must be index 0 so in the enum it must be 1");
+        static_assert(static_cast<int>(ResourceType::ENERGY)     == 2, "ENERGY must be index 1");
+        static_assert(static_cast<int>(ResourceType::MONEY)      == 3, "MONEY must be index 2");
+        static_assert(static_cast<int>(ResourceType::POPULATION) == 4, "POPULATION must be index 3");
+        static_assert(static_cast<int>(ResourceType::CO2)        == 5, "CO2 must be index 4");
     }
 
 bool ResourceManager::tick()
