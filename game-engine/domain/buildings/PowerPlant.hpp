@@ -3,7 +3,7 @@
 
 #include "../Building.hpp"
 
-// To make it easier to change later
+// To make it easier to change later, might be best to move to a config file
 #define POWER_PLANT_COST 500
 #define POWER_PLANT_TICKS 10
 #define POWER_PLANT_ENERGY_EFFECT 30
@@ -12,16 +12,12 @@
 // This is a child example, it currently has fixed values
 // ADD randomization of values
 class PowerPlant : public Building {
-    private:
-        std::vector<ResourceEffect> applyEffects() const override {
-            return {
-                {ENERGY, POWER_PLANT_ENERGY_EFFECT},
-                {CO2, POWER_PLANT_CO2_EFFECT}
-            };
-        }
-
     public:
-        PowerPlant() : Building(BuildingType::POWER_PLANT, POWER_PLANT_COST, POWER_PLANT_TICKS) {}
+        PowerPlant();
+
+    private:
+        std::vector<ResourceEffect> createEffects() const override;
+        ~PowerPlant() override = default;
 
 };
 

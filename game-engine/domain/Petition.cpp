@@ -1,7 +1,3 @@
-#include "ResourceEffect.hpp"
-#include "Building.hpp"
-#include <string>
-#include <vector>
 #include "Petition.hpp"
 
 Petition::Petition(int id, Building* building)

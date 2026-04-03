@@ -1,4 +1,3 @@
-#include "ResourceType.hpp"
 #include "Resource.hpp"
 
 Resource::Resource(ResourceType type, int amount, int deltaPerTick)

@@ -1,4 +1,5 @@
 # Lists of repositories that are sourses for hooks, used by pre-commit framework
+exclude: ^(UI/target/|game-engine/.*\.o|.*\.pb\.(cc|h))
 repos:
   # URL of the repository, where hooks are located
   - repo: https://github.com/pocc/pre-commit-hooks
@@ -41,12 +42,12 @@ repos:
     hooks:
       - id: cargo-fmt
         name: Rust formatter (cargo fmt) # Required for local hooks, specifies the name of the hook
-        entry: cargo fmt -- # Required for local hooks, specifies the command to run
+        entry: bash -c 'cd UI && cargo fmt'
         language: system # Required for local hooks, specifies the language environment
         files: \.rs$
       - id: cargo-clippy
         name: Rust linter (cargo clippy)
-        entry: cargo clippy -- -D warnings
+        entry: bash -c 'cd UI && cargo clippy -- -D warnings'
         language: system
         files: \.rs$
         pass_filenames: false

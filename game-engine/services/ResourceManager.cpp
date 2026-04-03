@@ -1,6 +1,4 @@
-#include "domain/Resource.hpp"
-#include "domain/ResourceEffect.hpp"
-#include "services/ResourceManager.hpp"
+#include "ResourceManager.hpp"
 
 // Enum order:  WATER=0, ENERGY=1, MONEY=2, POPULATION=3, CO2=4
 // Array must follow the same order:
