@@ -4,7 +4,7 @@
 // Any changes to this enum must be reflected in ResourceManager.cpp
 
 enum ResourceType{
-    UNSPECIFIED,
+    RESOURCE_UNSPECIFIED,
     WATER,
     ENERGY,
     MONEY,
