@@ -1,7 +1,6 @@
 #ifndef BUILDING_H
 #define BUILDING_H
 
-#include <string>
 #include <vector>
 
 #include "ResourceEffect.hpp"
@@ -14,39 +13,25 @@ class Building {
         int ticksToComplete;
 
         // Subclasses implement this, but it can't be called directly
-        virtual std::vector<ResourceEffect> applyEffects() const = 0;
+        virtual std::vector<ResourceEffect> createEffects() const = 0;
+
+    protected:
+        std::vector<ResourceEffect> effects;
 
     public:
-        Building(enum BuildingType type, int buildCost, int ticksToComplete)
-        {
-            this->type = type;
-            this->buildCost = buildCost;
-            this->ticksToComplete = ticksToComplete;
-        }
+        Building(enum BuildingType type, int buildCost, int ticksToComplete);
 
-        std::vector<ResourceEffect> buildTick()
-        {
-            ticksToComplete--;
-            if (ticksToComplete > 0) {
-                return {};              // not done yet, no effects
-            }
-            return applyEffects();      // done, subclass gives the effects
-        }
+        std::vector<ResourceEffect> buildTick();
 
-        enum BuildingType getType() const
-        {
-            return type;
-        }
+        enum BuildingType getType() const;
 
-        int getBuildCost() const
-        {
-            return buildCost;
-        }
+        int getBuildCost() const;
 
-        int getTicksToComplete() const
-        {
-            return ticksToComplete;
-        }
+        int getTicksToComplete() const;
+
+        const std::vector<ResourceEffect>& getEffects() const;
+
+        virtual ~Building() = default;
 };
 
 #endif

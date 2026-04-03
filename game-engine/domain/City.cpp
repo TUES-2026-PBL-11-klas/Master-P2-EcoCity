@@ -1,5 +1,3 @@
-#include "BuildingType.hpp"
-#include <unordered_map>
 #include "City.hpp"
 
 City::City()

@@ -3,7 +3,7 @@
 
 #include "ResourceManager.hpp"
 #include "PetitionManager.hpp"
-#include "domain/City.hpp"
+#include "../domain/City.hpp"
 
 class GameService {
     private:

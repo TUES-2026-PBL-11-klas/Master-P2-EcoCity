@@ -3,8 +3,8 @@
 
 #include <vector>
 #include <array>
-#include "domain/Resource.hpp"
-#include "domain/ResourceEffect.hpp"
+#include "../domain/Resource.hpp"
+#include "../domain/ResourceEffect.hpp"
 
 class ResourceManager {
     private:
