@@ -10,25 +10,21 @@ bool GameService::tick()
 {
     std::vector<ResourceEffect> petitionEffects = petitionManager->tick();
     resourceManager->applyEffect(petitionEffects);
-    bool gameOver = resourceManager->tick();//Putting a comment here so we do not
-    //forget this might not need to be checking game over.
-    //Also maybe we should modify the entire chain of functions
-    //because i am not sure if Resource.changeCurrentValue works as intendded
-    //especially for CO2.
-    return gameOver;
+    resourceManager->tick();
+    return checkGameOver();
 }
 
-// bool GameService::checkGameOver()
-// {
-//     if(this->resourceManager->getResourceValue(WATER) <= 0 ||
-//         this->resourceManager->getResourceValue(ENERGY) <= 0 ||
-//         this->resourceManager->getResourceValue(MONEY) <= 0 ||
-//         this->resourceManager->getResourceValue(CO2) >= 10000)
-//     {
-//         return true;
-//     }
-//     else return false;
-// }
+bool GameService::checkGameOver()
+{
+    for(const Resource& resource : *resourceManager)
+    {
+        if (resource.getCurrentValue() <= 0 && resource.getType() != CO2) {
+            return true;    // Game over if any resource except CO2 is depleted
+        }
+    }
+
+    return resourceManager->getResourceValue(CO2) >= 10000; // Game over if CO2 reaches 10000
+}
 
 void GameService::readPlayerInput()
 {

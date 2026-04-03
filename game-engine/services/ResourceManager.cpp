@@ -22,16 +22,12 @@ ResourceManager::ResourceManager()
         static_assert(static_cast<int>(ResourceType::CO2)        == 5, "CO2 must be index 4");
     }
 
-bool ResourceManager::tick()
+void ResourceManager::tick()
 {
-    bool gameOver = false;
-    for(Resource& resource : resources) {
-        if(resource.changeCurrentValue()) {
-            gameOver = true;
-            break;
-        }
+    for(Resource& resource : resources)
+    {
+        resource.changeCurrentValue();
     }
-    return gameOver;
 }
 
 void ResourceManager::applyEffect(const std::vector<ResourceEffect>& effects) {

@@ -15,7 +15,7 @@ class ResourceManager {
         std::array<Resource, 5>::iterator end()   { return resources.end();   }
 
         ResourceManager();
-        bool tick();
+        void tick();
         void applyEffect(const std::vector<ResourceEffect>& effects);
         int getResourceValue(enum ResourceType type);
 };
