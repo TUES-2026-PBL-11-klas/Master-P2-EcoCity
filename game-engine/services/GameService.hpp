@@ -3,7 +3,7 @@
 
 #include "ResourceManager.hpp"
 #include "PetitionManager.hpp"
-#include "domain/City.hpp"
+#include "../domain/City.hpp"
 
 class GameService {
     private:
@@ -14,7 +14,6 @@ class GameService {
         GameService(ResourceManager* resourceManager, PetitionManager* petitionManager, City* city);
         bool tick();
         void readPlayerInput();
-        bool checkGameOver();
 };
 
 #endif
