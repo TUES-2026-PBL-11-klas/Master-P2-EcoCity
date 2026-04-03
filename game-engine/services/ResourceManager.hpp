@@ -1,6 +1,11 @@
 #ifndef RESOURCE_MANAGER_H
 #define RESOURCE_MANAGER_H
 
+#define WATER_CHANGE 100
+#define ENERGY_CHANGE 100
+#define MONEY_CHANGE 10000
+#define CO2_CHANGE 100
+
 #include <vector>
 #include <array>
 #include "../domain/Resource.hpp"

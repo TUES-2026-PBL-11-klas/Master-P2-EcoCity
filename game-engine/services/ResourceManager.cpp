@@ -34,7 +34,31 @@ bool ResourceManager::tick()
 
 void ResourceManager::applyEffect(const std::vector<ResourceEffect>& effects) {
     for (const ResourceEffect& effect : effects) {
-        resources[static_cast<int>(effect.type)].changeDeltaPerTick(effect.deltaValue);
+        switch (effect.type) {
+
+            case ResourceType::WATER:
+                resources[static_cast<int>(ResourceType::WATER)].changeDeltaPerTick(effect.deltaValue * WATER_CHANGE);
+                break;
+
+            case ResourceType::ENERGY:
+                resources[static_cast<int>(ResourceType::ENERGY)].changeDeltaPerTick(effect.deltaValue * ENERGY_CHANGE);
+                break;
+
+            case ResourceType::POPULATION:
+                resources[static_cast<int>(ResourceType::POPULATION)].changeDeltaPerTick(effect.deltaValue);
+                break;
+
+            case ResourceType::MONEY:
+                resources[static_cast<int>(ResourceType::MONEY)].changeDeltaPerTick(effect.deltaValue * MONEY_CHANGE);
+                break;
+
+            case ResourceType::CO2:
+                resources[static_cast<int>(ResourceType::CO2)].changeDeltaPerTick(effect.deltaValue * CO2_CHANGE);
+                break;
+
+            default:
+                break;
+        }
     }
 }
 
