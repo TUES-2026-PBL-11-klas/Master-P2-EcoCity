@@ -9,7 +9,7 @@ std::vector<ResourceEffect> Building::buildTick()
     if (ticksToComplete > 0) {
         return {};              // not done yet, no effects
     }
-    return applyEffects();      // done, subclass gives the effects
+    return effects;             // done, subclass gives the effects
 }
 
 enum BuildingType Building::getType() const
@@ -25,4 +25,9 @@ int Building::getBuildCost() const
 int Building::getTicksToComplete() const
 {
     return ticksToComplete;
+}
+
+const std::vector<ResourceEffect>& Building::getEffects() const
+{
+    return effects;
 }

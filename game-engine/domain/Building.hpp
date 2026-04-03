@@ -13,7 +13,10 @@ class Building {
         int ticksToComplete;
 
         // Subclasses implement this, but it can't be called directly
-        virtual std::vector<ResourceEffect> applyEffects() const = 0;
+        virtual std::vector<ResourceEffect> createEffects() const = 0;
+
+    protected:
+        std::vector<ResourceEffect> effects;
 
     public:
         Building(enum BuildingType type, int buildCost, int ticksToComplete);
@@ -25,6 +28,8 @@ class Building {
         int getBuildCost() const;
 
         int getTicksToComplete() const;
+
+        const std::vector<ResourceEffect>& getEffects() const;
 
         virtual ~Building() = default;
 };
