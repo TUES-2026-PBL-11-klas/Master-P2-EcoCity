@@ -1,7 +1,3 @@
-#include <vector>
-#include "domain/ResourceEffect.hpp"
-#include "domain/ResourceType.hpp"
-#include "domain/Petition.hpp"
 #include "PetitionManager.hpp"
 
 PetitionManager::PetitionManager()

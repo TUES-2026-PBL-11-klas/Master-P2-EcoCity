@@ -2,9 +2,7 @@
 #define PETITION_MANAGER_H
 
 #include <vector>
-#include "domain/ResourceEffect.hpp"
-#include "domain/ResourceType.hpp"
-#include "domain/Petition.hpp"
+#include "../domain/Petition.hpp"
 
 class PetitionManager {
     private:
