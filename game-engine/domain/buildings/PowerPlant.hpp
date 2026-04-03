@@ -1,7 +1,7 @@
 #ifndef POWER_PLANT_H
 #define POWER_PLANT_H
 
-#include "domain/Building.hpp"
+#include "../Building.hpp"
 
 // To make it easier to change later
 #define POWER_PLANT_COST 500

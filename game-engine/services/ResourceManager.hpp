@@ -10,6 +10,8 @@ class ResourceManager {
     private:
         std::array<Resource, 5> resources;  // replaces the 5 separate fields, Iterator design pattern
 
+        int getIndexForResourceType(ResourceType type) const;
+
     public:
         std::array<Resource, 5>::iterator begin() { return resources.begin(); }
         std::array<Resource, 5>::iterator end()   { return resources.end();   }

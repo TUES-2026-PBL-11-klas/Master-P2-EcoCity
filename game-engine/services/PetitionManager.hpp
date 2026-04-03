@@ -1,6 +1,7 @@
 #ifndef PETITION_MANAGER_H
 #define PETITION_MANAGER_H
 
+#include <algorithm>
 #include <vector>
 #include "domain/ResourceEffect.hpp"
 #include "domain/ResourceType.hpp"

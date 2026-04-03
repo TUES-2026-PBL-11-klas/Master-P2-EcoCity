@@ -22,6 +22,11 @@ ResourceManager::ResourceManager()
         static_assert(static_cast<int>(ResourceType::CO2)        == 5, "CO2 must be index 4");
     }
 
+int ResourceManager::getIndexForResourceType(ResourceType type) const
+{
+    return static_cast<int>(type) - 1; // enum starts at 1 for WATER, but WATER is at index 0
+}
+
 void ResourceManager::tick()
 {
     for(Resource& resource : resources)
@@ -32,10 +37,10 @@ void ResourceManager::tick()
 
 void ResourceManager::applyEffect(const std::vector<ResourceEffect>& effects) {
     for (const ResourceEffect& effect : effects) {
-        resources[static_cast<int>(effect.type)].changeDeltaPerTick(effect.deltaValue);
+        resources[getIndexForResourceType(effect.type)].changeDeltaPerTick(effect.deltaValue);
     }
 }
 
 int ResourceManager::getResourceValue(ResourceType type) {
-    return resources[static_cast<int>(type)].getCurrentValue();
+    return resources[getIndexForResourceType(type)].getCurrentValue();
 }
