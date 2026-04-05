@@ -1,45 +1,24 @@
-#include <vector>
-#include "domain/ResourceEffect.hpp"
-#include "domain/ResourceType.hpp"
-#include "domain/Petition.hpp"
+#include "PetitionManager.hpp"
 
-class PetitionManager {
-    private:
-        int petitionCount;
-        std::vector<Petition*> underConstructionPetitions;
-    public:
-        PetitionManager()
-        {
-            petitionCount = 0;
-            underConstructionPetitions.clear();
-        }
-        std::vector<ResourceEffect> tick()
-        {
-            std::vector<Petition*> petitionsToRemove;
-            std::vector<ResourceEffect> completedEffects;
-            for (auto& petition : underConstructionPetitions) {
-                petition->decreaseTicksToComplete();
-                if(petition->getTicksToComplete() <= 0){
-                    completedEffects.insert(completedEffects.end(), petition->getEffects().begin(), petition->getEffects().end());
-                    petitionsToRemove.push_back(petition);
-                }
-            }
+PetitionManager::PetitionManager()
+{
+    currentPetition = generatePetition();
+}
 
-<<<<<<< Updated upstream
-            for(auto& petition : petitionsToRemove) {
-                underConstructionPetitions.erase(
-                    std::remove(underConstructionPetitions.begin(), underConstructionPetitions.end(), petition),
-                    underConstructionPetitions.end()
-                );
-            }
-            
-            return completedEffects;
+// Returns effects of the completed petitions
+std::vector<ResourceEffect> PetitionManager::tick()
+{
+    std::vector<Petition*> petitionsToRemove;
+    std::vector<ResourceEffect> completedEffects;
+    for (auto& petition : underConstructionPetitions) {
+        std::vector<ResourceEffect> effects = petition->buildTick();
+
+        if(!effects.empty()) {
+            completedEffects.insert(completedEffects.end(), effects.begin(), effects.end());
+            petitionsToRemove.push_back(petition);
         }
-        void generatePetition();
-        void removePetition(int id);
-        void addPetition(Petition* petition);
-};
-=======
+    }
+
     for(auto& petition : petitionsToRemove) {
         underConstructionPetitions.erase(
             std::remove(underConstructionPetitions.begin(), underConstructionPetitions.end(), petition),
@@ -98,7 +77,4 @@ Petition* PetitionManager::generatePetition() // This needs to be implemented
             
         }
     }
-
-
 }
->>>>>>> Stashed changes
