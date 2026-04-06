@@ -54,27 +54,50 @@ Petition* PetitionManager::getCurrentPetition() const
     return currentPetition;
 }
 
-Petition* PetitionManager::generatePetition() // This needs to be implemented
+Petition* PetitionManager::generatePetition()
 {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(1, 3);
+
     int num = dis(gen);
 
     switch(num){
-        case 1: //we get a petition for energy
+
+        case 1: //we get a building for energy
         {
-            Building* b = new PowerPlant();
-            Petition* p = new Petition(1, b);
-            return p;
+            std::uniform_int_distribution<> dis2(1, 2);
+            int num2 = dis2(gen);
+
+            switch(num2){
+                case 1:
+                    return new Petition(1, new PowerPlant());
+
+                case 2:
+                    return new Petition(1, new WindTurbineFarm());
+            }
         }
-        case 2: //we get a petition for water
+
+        case 2: //we get a building for water
         {
-            
+            return nullptr;
         }
-        case 3: //we get a petition for money
+
+        case 3: //we get a building for money
         {
-            
+            std::uniform_int_distribution<> dis3(1, 2);
+            int num2 = dis3(gen);
+
+            switch(num2){
+                case 1:
+                    return new Petition(3, new IndustrialZone());
+
+                case 2:
+                    return new Petition(3, new AirportExpansion());
+            }
         }
     }
+
+    return nullptr;
+}
 }
