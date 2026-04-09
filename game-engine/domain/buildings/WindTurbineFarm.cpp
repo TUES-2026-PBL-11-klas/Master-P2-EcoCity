@@ -1,10 +1,10 @@
 #include "WindTurbineFarm.hpp"
 
 namespace {
-constexpr std::int64_t WIND_TURBINE_COST = 21'000'000LL;
+constexpr std::int64_t WIND_TURBINE_COST = 210LL;
 constexpr int WIND_TURBINE_TICKS = 5;
-constexpr std::int64_t WIND_TURBINE_ENERGY = 460'000'000LL;
-constexpr std::int64_t WIND_TURBINE_CO2 = -700LL;
+constexpr std::int64_t WIND_TURBINE_ENERGY = 460'000LL;
+constexpr std::int64_t WIND_TURBINE_CO2 = -140LL;
 }
 
 WindTurbineFarm::WindTurbineFarm()
