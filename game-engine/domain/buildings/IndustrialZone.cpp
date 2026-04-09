@@ -1,10 +1,10 @@
 #include "IndustrialZone.hpp"
 
 namespace {
-constexpr std::int64_t INDUSTRIAL_ZONE_COST = 3'500'000'000LL;
+constexpr std::int64_t INDUSTRIAL_ZONE_COST = 35'000LL;
 constexpr int INDUSTRIAL_ZONE_TICKS = 6;
-constexpr std::int64_t INDUSTRIAL_ZONE_MONEY = 660'000'000LL;
-constexpr std::int64_t INDUSTRIAL_ZONE_CO2 = 500'000LL;
+constexpr std::int64_t INDUSTRIAL_ZONE_MONEY = 6'600LL;
+constexpr std::int64_t INDUSTRIAL_ZONE_CO2 = 100'000LL;
 }
 
 IndustrialZone::IndustrialZone()

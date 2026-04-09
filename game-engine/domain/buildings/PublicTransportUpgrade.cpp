@@ -1,9 +1,9 @@
 #include "PublicTransportUpgrade.hpp"
 
 namespace {
-constexpr std::int64_t PUBLIC_TRANSPORT_COST = 15'000'000'000LL;
+constexpr std::int64_t PUBLIC_TRANSPORT_COST = 150'000LL;
 constexpr int PUBLIC_TRANSPORT_TICKS = 6;
-constexpr std::int64_t PUBLIC_TRANSPORT_CO2 = -7'500LL;
+constexpr std::int64_t PUBLIC_TRANSPORT_CO2 = -1'500LL;
 }
 
 PublicTransportUpgrade::PublicTransportUpgrade()

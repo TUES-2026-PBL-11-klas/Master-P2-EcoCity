@@ -1,10 +1,10 @@
 #include "HydroelectricPlant.hpp"
 
 namespace {
-constexpr std::int64_t HYDROELECTRIC_COST = 2'500'000LL;
+constexpr std::int64_t HYDROELECTRIC_COST = 25LL;
 constexpr int HYDROELECTRIC_TICKS = 7;
-constexpr std::int64_t HYDROELECTRIC_ENERGY = 4'000'000LL;
-constexpr std::int64_t HYDROELECTRIC_CO2 = -950LL;
+constexpr std::int64_t HYDROELECTRIC_ENERGY = 4'000LL;
+constexpr std::int64_t HYDROELECTRIC_CO2 = -190LL;
 }
 
 HydroelectricPlant::HydroelectricPlant()

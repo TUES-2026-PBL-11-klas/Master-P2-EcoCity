@@ -1,11 +1,11 @@
 #include "SolarPanelFarm.hpp"
 
 namespace {
-constexpr std::int64_t SOLAR_PANEL_FARM_COST = 1'000'000LL;
+constexpr std::int64_t SOLAR_PANEL_FARM_COST = 10LL;
 constexpr int SOLAR_PANEL_FARM_TICKS = 3;
-constexpr std::int64_t SOLAR_PANEL_FARM_ENERGY = 850'000LL;
-constexpr std::int64_t SOLAR_PANEL_FARM_CO2 = -190LL;
-constexpr std::int64_t SOLAR_PANEL_FARM_WATER = -200'000LL;
+constexpr std::int64_t SOLAR_PANEL_FARM_ENERGY = 850LL;
+constexpr std::int64_t SOLAR_PANEL_FARM_CO2 = -38LL;
+constexpr std::int64_t SOLAR_PANEL_FARM_WATER = -200LL;
 }
 
 SolarPanelFarm::SolarPanelFarm()

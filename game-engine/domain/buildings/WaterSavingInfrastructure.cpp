@@ -1,9 +1,9 @@
 #include "WaterSavingInfrastructure.hpp"
 
 namespace {
-constexpr std::int64_t WATER_SAVING_COST = 500'000'000LL;
+constexpr std::int64_t WATER_SAVING_COST = 5'000LL;
 constexpr int WATER_SAVING_TICKS = 5;
-constexpr std::int64_t WATER_SAVING_WATER = 150'000'000LL;
+constexpr std::int64_t WATER_SAVING_WATER = 150'000LL;
 }
 
 WaterSavingInfrastructure::WaterSavingInfrastructure()

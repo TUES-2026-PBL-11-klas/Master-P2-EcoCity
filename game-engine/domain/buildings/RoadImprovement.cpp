@@ -1,10 +1,10 @@
 #include "RoadImprovement.hpp"
 
 namespace {
-constexpr std::int64_t ROAD_IMPROVEMENT_COST = 50'000'000LL;
+constexpr std::int64_t ROAD_IMPROVEMENT_COST = 500LL;
 constexpr int ROAD_IMPROVEMENT_TICKS = 4;
-constexpr std::int64_t ROAD_IMPROVEMENT_MONEY = 10'000'000LL;
-constexpr std::int64_t ROAD_IMPROVEMENT_CO2 = 26'000LL;
+constexpr std::int64_t ROAD_IMPROVEMENT_MONEY = 100LL;
+constexpr std::int64_t ROAD_IMPROVEMENT_CO2 = 5'200LL;
 }
 
 RoadImprovement::RoadImprovement()
