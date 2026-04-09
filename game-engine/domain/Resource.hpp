@@ -5,7 +5,7 @@
 
 #include "ResourceType.hpp"
 
-constexpr std::int64_t MAX_RESOURCE_VALUE = 1'000'000'000'000LL;
+constexpr std::int64_t MAX_RESOURCE_VALUE = 1'000'000'000LL;
 
 class Resource {
     private:

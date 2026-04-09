@@ -6,10 +6,10 @@ namespace {
 void printResourceSnapshot(const ResourceManager& resourceManager, int year)
 {
     std::cout << "Year " << year
-              << " | Money: " << resourceManager.getResourceValue(MONEY)
-              << " | Energy: " << resourceManager.getResourceValue(ENERGY)
-              << " | Water: " << resourceManager.getResourceValue(WATER)
-              << " | CO2: " << resourceManager.getResourceValue(CO2)
+              << " | Money (100k GBP): " << resourceManager.getResourceValue(MONEY)
+              << " | Energy (MWh): " << resourceManager.getResourceValue(ENERGY)
+              << " | Water (kL): " << resourceManager.getResourceValue(WATER)
+              << " | CO2 (5 t): " << resourceManager.getResourceValue(CO2)
               << " | Population: " << resourceManager.getResourceValue(POPULATION)
               << '\n';
 }

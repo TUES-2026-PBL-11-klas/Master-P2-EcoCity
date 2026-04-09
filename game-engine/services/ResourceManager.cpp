@@ -9,11 +9,11 @@ std::size_t resourceIndex(ResourceType type)
 
 ResourceManager::ResourceManager()
     : resources{
-        Resource(ResourceType::WATER, 1'000'000'000LL, 0),
-        Resource(ResourceType::ENERGY, 5'000'000'000LL, 0),
-        Resource(ResourceType::MONEY, 25'000'000'000LL, 0),
+        Resource(ResourceType::WATER, 1'000'000LL, 0),
+        Resource(ResourceType::ENERGY, 5'000'000LL, 0),
+        Resource(ResourceType::MONEY, 250'000LL, 0),
         Resource(ResourceType::POPULATION, 1'000'000LL, 0),
-        Resource(ResourceType::CO2, 5'000'000LL, 0)
+        Resource(ResourceType::CO2, 1'000'000LL, 0)
     }
     {
         static_assert(static_cast<int>(ResourceType::WATER)      == 1, "WATER must map to index 0");
