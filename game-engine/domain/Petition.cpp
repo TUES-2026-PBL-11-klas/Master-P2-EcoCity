@@ -22,3 +22,8 @@ const std::vector<ResourceEffect> Petition::buildTick()
 {
     return building->buildTick();
 }
+
+Petition::~Petition()
+{
+    delete building;
+}

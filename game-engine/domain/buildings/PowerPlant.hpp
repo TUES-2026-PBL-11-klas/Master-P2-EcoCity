@@ -14,10 +14,10 @@
 class PowerPlant : public Building {
     public:
         PowerPlant();
+        ~PowerPlant() override = default;
 
     private:
         std::vector<ResourceEffect> createEffects() const override;
-        ~PowerPlant() override = default;
 
 };
 

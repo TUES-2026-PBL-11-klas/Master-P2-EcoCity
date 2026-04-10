@@ -22,7 +22,7 @@ ResourceManager::ResourceManager()
 
 int ResourceManager::getIndexForResourceType(ResourceType type) const
 {
-    return static_cast<int>(type) - 1; // enum starts at 1 for WATER, but WATER is at index 0
+    return static_cast<int>(type) - 1; // enum starts at 1 for WATER, but WATER is at index 0 in arr
 }
 
 void ResourceManager::tick()

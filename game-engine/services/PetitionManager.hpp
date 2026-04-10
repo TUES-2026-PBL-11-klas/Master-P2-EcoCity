@@ -17,6 +17,10 @@ class PetitionManager {
         void rejectPetition();
         Petition* generatePetition();
         Petition* getCurrentPetition() const;
+        ~PetitionManager();
+
+        PetitionManager(const PetitionManager&) = delete;
+        PetitionManager& operator=(const PetitionManager&) = delete;
 };
 
 #endif
