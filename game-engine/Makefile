@@ -2,15 +2,19 @@ CXX := g++
 CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic
 TARGET := eco_city_engine
 
-PROTO_SRC_DIR := ../game_api
-PROTO_FILE := $(PROTO_SRC_DIR)/api.proto
+PROTOC := C:/vcpkg/installed/x64-mingw-dynamic/tools/protobuf/protoc.exe
 
-PROTO_GEN_CC := api.pb.cc
-PROTO_GEN_H := api.pb.h
-PROTO_OBJ := api.pb.o
+PROTO_SRC_DIR := ../game_api/v1
+PROTO_FILE := $(PROTO_SRC_DIR)/api_types.proto
 
+PROTO_GEN_CC := api_types.pb.cc
+PROTO_GEN_H := api_types.pb.h
+PROTO_OBJ := api_types.pb.o
+
+# IN THE FUTURE ALL BUILDING CHILDREN SHOULD PROBABLY BE IN A VARIABLE THAT IS HERE
 SRCS := main.cpp \
-        $(PROTO_GEN_CC) \
+		domain/buildings/PowerPlant.cpp \
+		domain/Building.cpp \
         domain/City.cpp \
         domain/Petition.cpp \
         domain/Resource.cpp \
@@ -24,26 +28,33 @@ ifeq ($(OS),Windows_NT)
     TARGET := $(TARGET).exe
     DEL := del /q
     FIXPATH = $(subst /,\,$1)
-    LIBS := -lprotobuf
+    VCPKG_LIB := C:/vcpkg/installed/x64-mingw-dynamic/lib
+    CXXFLAGS += -IC:/vcpkg/installed/x64-mingw-dynamic/include
+    LDFLAGS := -L$(VCPKG_LIB)
+    LIBS := -lprotobuf -lprotobuf-lite -labseil_dll -lutf8_validity -lws2_32
 else
     DEL := rm -f
     FIXPATH = $1
+	LDFLAGS :=
     LIBS := `pkg-config --libs protobuf`
 endif
 
 all: $(TARGET)
 
 $(PROTO_GEN_CC) $(PROTO_GEN_H): $(PROTO_FILE)
-	protoc --proto_path=$(PROTO_SRC_DIR) --cpp_out=. $(PROTO_FILE)
+	$(PROTOC) --proto_path=$(PROTO_SRC_DIR) --cpp_out=. $(PROTO_FILE)
 
-$(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
+$(PROTO_OBJ): $(PROTO_GEN_CC) $(PROTO_GEN_H)
+	$(CXX) $(CXXFLAGS) -c $(PROTO_GEN_CC) -o $(PROTO_OBJ)
+
+$(TARGET): $(PROTO_OBJ) $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(PROTO_OBJ) $(OBJS) $(LDFLAGS) $(LIBS)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	$(DEL) $(call FIXPATH,$(OBJS)) $(TARGET) $(PROTO_GEN_CC) $(PROTO_GEN_H)
+	$(DEL) $(call FIXPATH,$(OBJS)) $(TARGET) $(PROTO_GEN_CC) $(PROTO_GEN_H) $(PROTO_OBJ)
 
 re: clean all
 

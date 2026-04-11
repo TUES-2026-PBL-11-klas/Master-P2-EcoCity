@@ -5,6 +5,9 @@ Building::Building(enum BuildingType type, int buildCost, int ticksToComplete)
 
 std::vector<ResourceEffect> Building::buildTick()
 {
+    if(ticksToComplete <= 0) {
+        return {};              // Already completed, no effects, in case this is called again by mistake
+    }
     ticksToComplete--;
     if (ticksToComplete > 0) {
         return {};              // not done yet, no effects

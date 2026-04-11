@@ -1,5 +1,7 @@
 #include "PetitionManager.hpp"
 
+#include "../domain/buildings/PowerPlant.hpp" // There might be a better way to do this than including all the building types here
+
 PetitionManager::PetitionManager()
 {
     currentPetition = generatePetition();
@@ -54,7 +56,17 @@ Petition* PetitionManager::getCurrentPetition() const
     return currentPetition;
 }
 
-Petition* PetitionManager::generatePetition() // This needs to be implemented
+Petition* PetitionManager::generatePetition() // This needs to be implemented. Placeholder, should return a new Petition based on game logic
 {
-    return nullptr; // Placeholder, should return a new Petition based on game logic
+    static int nextId = 1;
+    Building* building = new PowerPlant();
+    return new Petition(nextId++, building);
+}
+
+PetitionManager::~PetitionManager() {
+    delete currentPetition;
+    for (Petition* petition : underConstructionPetitions)
+    {
+        delete petition;
+    }
 }

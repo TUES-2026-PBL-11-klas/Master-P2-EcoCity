@@ -1,6 +1,7 @@
 #ifndef PETITION_MANAGER_H
 #define PETITION_MANAGER_H
 
+#include <algorithm>
 #include <vector>
 #include "../domain/Petition.hpp"
 
@@ -16,6 +17,10 @@ class PetitionManager {
         void rejectPetition();
         Petition* generatePetition();
         Petition* getCurrentPetition() const;
+        ~PetitionManager();
+
+        PetitionManager(const PetitionManager&) = delete;
+        PetitionManager& operator=(const PetitionManager&) = delete;
 };
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef POWER_PLANT_H
 #define POWER_PLANT_H
 
-#include "../domain/Building.hpp"
+#include "../Building.hpp"
 
 // To make it easier to change later, might be best to move to a config file
 #define POWER_PLANT_COST 500
@@ -14,10 +14,10 @@
 class PowerPlant : public Building {
     public:
         PowerPlant();
+        ~PowerPlant() override = default;
 
     private:
         std::vector<ResourceEffect> createEffects() const override;
-        ~PowerPlant() override = default;
 
 };
 

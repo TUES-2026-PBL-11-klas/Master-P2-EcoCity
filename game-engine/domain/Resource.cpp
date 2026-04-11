@@ -23,15 +23,13 @@ void Resource::changeDeltaPerTick(int delta)
     this->deltaPerTick += delta;
 }
 
-bool Resource::changeCurrentValue()
+void Resource::changeCurrentValue()
 {
     this->currentValue += this->deltaPerTick;
     if (this->currentValue < 0) {
         this->currentValue = 0;
-        return true; // Game over
     }
     if (this->currentValue > MAX_RESOURCE_VALUE) {
         this->currentValue = MAX_RESOURCE_VALUE;
     }
-    return false;
 }
