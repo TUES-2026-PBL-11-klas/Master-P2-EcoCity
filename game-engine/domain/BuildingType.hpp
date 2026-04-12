@@ -3,7 +3,7 @@
 
 // If you change this enum, make sure to update the .proto file, add a new building type in buildings, update City constructor and Makefile
 
-enum BuildingType{
+enum BuildingType {
     BUILDING_UNSPECIFIED,
     POWER_PLANT,
     WATER_TREATMENT_PLANT,

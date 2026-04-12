@@ -4,7 +4,7 @@
 #include "BuildingType.hpp"
 #include <unordered_map>
 
-class City{
+class City {
     private:
         std::unordered_map<BuildingType, int> buildings;
 
@@ -12,6 +12,7 @@ class City{
         City();
         void addBuilding(BuildingType type);
         int getBuildingCount(BuildingType type) const;
+        const std::unordered_map<BuildingType, int>& getBuildings() const;
 };
 
 #endif

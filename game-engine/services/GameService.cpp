@@ -42,7 +42,7 @@ bool GameService::checkGameOver()
         }
     }
 
-    return resourceManager->getResourceValue(CO2) >= MAX_CO2; // Game over if CO2 reaches 10000
+    return resourceManager->getResourceValue(CO2) >= MAX_CO2; // Game over if CO2 reaches limit
 }
 
 void GameService::readPlayerInput()

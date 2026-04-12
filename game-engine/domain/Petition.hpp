@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-class Petition{
+class Petition {
     private:
         int id;
         Building* building;
