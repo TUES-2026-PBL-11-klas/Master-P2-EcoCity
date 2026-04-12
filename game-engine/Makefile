@@ -11,10 +11,9 @@ PROTO_GEN_CC := api_types.pb.cc
 PROTO_GEN_H := api_types.pb.h
 PROTO_OBJ := api_types.pb.o
 
-# IN THE FUTURE ALL BUILDING CHILDREN SHOULD PROBABLY BE IN A VARIABLE THAT IS HERE
 SRCS := main.cpp \
-		domain/buildings/PowerPlant.cpp \
 		domain/Building.cpp \
+		domain/buildings/BuildingFactory.cpp \
         domain/City.cpp \
         domain/Petition.cpp \
         domain/Resource.cpp \
@@ -22,7 +21,22 @@ SRCS := main.cpp \
         services/PetitionManager.cpp \
         services/ResourceManager.cpp
 
+BUILDING_SRCS := domain/buildings/AirportExpansion.cpp \
+				domain/buildings/HydroelectricPlant.cpp \
+				domain/buildings/IndustrialZone.cpp \
+				domain/buildings/PowerPlant.cpp \
+				domain/buildings/PublicTransportUpgrade.cpp \
+				domain/buildings/RoadImprovement.cpp \
+				domain/buildings/RooftopSolar.cpp \
+				domain/buildings/SolarPanelFarm.cpp \
+				domain/buildings/UrbanGreening.cpp \
+				domain/buildings/WaterSavingInfrastructure.cpp \
+				domain/buildings/WaterTreatmentPlant.cpp \
+				domain/buildings/WindTurbineFarm.cpp \
+
 OBJS := $(SRCS:.cpp=.o)
+
+OBJS += $(BUILDING_SRCS:.cpp=.o)
 
 ifeq ($(OS),Windows_NT)
     TARGET := $(TARGET).exe

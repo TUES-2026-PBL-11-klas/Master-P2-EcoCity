@@ -1,22 +1,21 @@
 #include "PetitionManager.hpp"
 
-#include "../domain/buildings/PowerPlant.hpp" // There might be a better way to do this than including all the building types here
-
 PetitionManager::PetitionManager()
+: currentPetition(nullptr), randomEngine(std::random_device{}()), nextPetitionId(1)
 {
     currentPetition = generatePetition();
 }
 
 // Returns effects of the completed petitions
-std::vector<ResourceEffect> PetitionManager::tick()
+std::vector<CompletedConstruction> PetitionManager::tick()
 {
     std::vector<Petition*> petitionsToRemove;
-    std::vector<ResourceEffect> completedEffects;
+    std::vector<CompletedConstruction> completedConstructions;
     for (auto& petition : underConstructionPetitions) {
         std::vector<ResourceEffect> effects = petition->buildTick();
 
         if(!effects.empty()) {
-            completedEffects.insert(completedEffects.end(), effects.begin(), effects.end());
+            completedConstructions.push_back({ petition->getBuilding()->getType(), std::move(effects) });
             petitionsToRemove.push_back(petition);
         }
     }
@@ -30,7 +29,7 @@ std::vector<ResourceEffect> PetitionManager::tick()
         delete petition;
     }
 
-    return completedEffects; // Could be empty if no petitions completed this tick
+    return completedConstructions; // Could be empty if no petitions completed this tick
 }
 
 void PetitionManager::acceptPetition()
@@ -58,9 +57,8 @@ Petition* PetitionManager::getCurrentPetition() const
 
 Petition* PetitionManager::generatePetition() // This needs to be implemented. Placeholder, should return a new Petition based on game logic
 {
-    static int nextId = 1;
     Building* building = new PowerPlant();
-    return new Petition(nextId++, building);
+    return new Petition(nextPetitionId++, building);
 }
 
 PetitionManager::~PetitionManager() {

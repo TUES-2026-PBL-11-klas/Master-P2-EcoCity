@@ -1,6 +1,6 @@
 #include "Building.hpp"
 
-Building::Building(enum BuildingType type, int buildCost, int ticksToComplete)
+Building::Building(enum BuildingType type, LLint buildCost, int ticksToComplete)
 : type(type), buildCost(buildCost), ticksToComplete(ticksToComplete) {}
 
 std::vector<ResourceEffect> Building::buildTick()
@@ -20,7 +20,7 @@ enum BuildingType Building::getType() const
     return type;
 }
 
-int Building::getBuildCost() const
+LLint Building::getBuildCost() const
 {
     return buildCost;
 }

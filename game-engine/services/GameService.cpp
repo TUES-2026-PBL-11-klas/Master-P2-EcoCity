@@ -1,16 +1,35 @@
 #include "GameService.hpp"
+#include <iostream>
+
+namespace {
+void printResourceSnapshot(const ResourceManager& resourceManager)
+{
+    std::cout << " | Money (100k GBP): " << resourceManager.getResourceValue(MONEY)
+              << " | Energy (MWh): " << resourceManager.getResourceValue(ENERGY)
+              << " | Water (kL): " << resourceManager.getResourceValue(WATER)
+              << " | CO2 (5 t): " << resourceManager.getResourceValue(CO2)
+              << " | Population: " << resourceManager.getResourceValue(POPULATION)
+              << '\n';
+}
+}
 
 GameService::GameService(ResourceManager* resourceManager, PetitionManager* petitionManager, City* city)
-{
-    this->resourceManager = resourceManager;
-    this->petitionManager = petitionManager;
-    this->city = city;
-}
+: resourceManager(resourceManager), petitionManager(petitionManager), city(city) {}
+
 bool GameService::tick()
 {
-    std::vector<ResourceEffect> petitionEffects = petitionManager->tick();
-    resourceManager->applyEffect(petitionEffects);
+    readPlayerInput();
+
+    const std::vector<CompletedConstruction> completedConstructions = petitionManager->tick();
+    for (const CompletedConstruction& construction : completedConstructions) {
+        resourceManager->applyEffect(construction.effects);
+        city->addBuilding(construction.type);
+    }
+
     resourceManager->tick();
+
+    printResourceSnapshot(*resourceManager);
+
     return checkGameOver();
 }
 
@@ -23,7 +42,7 @@ bool GameService::checkGameOver()
         }
     }
 
-    return resourceManager->getResourceValue(CO2) >= 10000; // Game over if CO2 reaches 10000
+    return resourceManager->getResourceValue(CO2) >= MAX_CO2; // Game over if CO2 reaches 10000
 }
 
 void GameService::readPlayerInput()
