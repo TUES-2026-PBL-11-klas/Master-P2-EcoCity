@@ -311,21 +311,30 @@ const char descriptor_table_protodef_api_5ftypes_2eproto[] ABSL_ATTRIBUTE_SECTIO
     "itionResponse\022\021\n\tresponded\030\001 \001(\010\022\020\n\010acce"
     "pted\030\002 \001(\010\"W\n\010UIAction\0228\n\021petition_respo"
     "nse\030\001 \001(\0132\035.game_api.v1.PetitionResponse"
-    "\022\021\n\tsave_game\030\002 \001(\010*\231\001\n\014BuildingType\022\035\n\031"
+    "\022\021\n\tsave_game\030\002 \001(\010*\366\003\n\014BuildingType\022\035\n\031"
     "BUILDING_TYPE_UNSPECIFIED\020\000\022\035\n\031BUILDING_"
     "TYPE_POWER_PLANT\020\001\022\'\n#BUILDING_TYPE_WATE"
     "R_TREATMENT_PLANT\020\002\022\"\n\036BUILDING_TYPE_SOL"
-    "AR_PANEL_FARM\020\003*\256\001\n\014ResourceType\022\035\n\031RESO"
-    "URCE_TYPE_UNSPECIFIED\020\000\022\027\n\023RESOURCE_TYPE"
-    "_WATER\020\001\022\030\n\024RESOURCE_TYPE_ENERGY\020\002\022\027\n\023RE"
-    "SOURCE_TYPE_MONEY\020\003\022\034\n\030RESOURCE_TYPE_POP"
-    "ULATION\020\004\022\025\n\021RESOURCE_TYPE_CO2\020\005b\006proto3"
+    "AR_PANEL_FARM\020\003\022&\n\"BUILDING_TYPE_SOLAR_P"
+    "ANEL_ROOFTOPS\020\004\022*\n&BUILDING_TYPE_PUBLIC_"
+    "TRANSPORT_UPGRADE\020\005\022#\n\037BUILDING_TYPE_WIN"
+    "D_TURBINE_FARM\020\006\022%\n!BUILDING_TYPE_HYDROE"
+    "LECTRIC_PLANT\020\007\022 \n\034BUILDING_TYPE_URBAN_G"
+    "REENING\020\010\022-\n)BUILDING_TYPE_WATER_SAVING_"
+    "INFRASTRUCTURE\020\t\022!\n\035BUILDING_TYPE_INDUST"
+    "RIAL_ZONE\020\n\022#\n\037BUILDING_TYPE_AIRPORT_EXP"
+    "ANSION\020\013\022\"\n\036BUILDING_TYPE_ROAD_IMPROVEME"
+    "NT\020\014*\256\001\n\014ResourceType\022\035\n\031RESOURCE_TYPE_U"
+    "NSPECIFIED\020\000\022\027\n\023RESOURCE_TYPE_WATER\020\001\022\030\n"
+    "\024RESOURCE_TYPE_ENERGY\020\002\022\027\n\023RESOURCE_TYPE"
+    "_MONEY\020\003\022\034\n\030RESOURCE_TYPE_POPULATION\020\004\022\025"
+    "\n\021RESOURCE_TYPE_CO2\020\005b\006proto3"
 };
 static ::absl::once_flag descriptor_table_api_5ftypes_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_api_5ftypes_2eproto = {
     false,
     false,
-    1080,
+    1429,
     descriptor_table_protodef_api_5ftypes_2eproto,
     "api_types.proto",
     &descriptor_table_api_5ftypes_2eproto_once,
@@ -345,7 +354,7 @@ const ::google::protobuf::EnumDescriptor* PROTOBUF_NONNULL BuildingType_descript
   return file_level_enum_descriptors_api_5ftypes_2eproto[0];
 }
 PROTOBUF_CONSTINIT const uint32_t BuildingType_internal_data_[] = {
-    262144u, 0u, };
+    851968u, 0u, };
 const ::google::protobuf::EnumDescriptor* PROTOBUF_NONNULL ResourceType_descriptor() {
   ::google::protobuf::internal::AssignDescriptors(&descriptor_table_api_5ftypes_2eproto);
   return file_level_enum_descriptors_api_5ftypes_2eproto[1];
