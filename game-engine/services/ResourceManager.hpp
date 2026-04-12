@@ -19,7 +19,9 @@ class ResourceManager {
         ResourceManager();
         void tick();
         void applyEffect(const std::vector<ResourceEffect>& effects);
-        int getResourceValue(enum ResourceType type);
+        void changeResourceValue(ResourceType type, LLint delta);
+        bool canAfford(LLint amount) const;
+        int getResourceValue(enum ResourceType type) const;
 };
 
 #endif

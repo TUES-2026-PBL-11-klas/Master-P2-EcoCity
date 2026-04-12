@@ -17,7 +17,7 @@ class PowerPlant : public Building {
         ~PowerPlant() override = default;
 
     private:
-        std::vector<ResourceEffect> createEffects() const override;
+        std::vector<ResourceEffect> Effects() const override;
 
 };
 

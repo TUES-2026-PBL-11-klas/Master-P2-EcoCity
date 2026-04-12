@@ -4,11 +4,11 @@
 // Array must follow the same order:
 ResourceManager::ResourceManager()
     : resources{
-        Resource(ResourceType::WATER, 1000, 10),        // index 0
-        Resource(ResourceType::ENERGY, 1000, 10),       // index 1
-        Resource(ResourceType::MONEY, 10000000, 10),    // index 2
-        Resource(ResourceType::POPULATION, 100, 10),    // index 3
-        Resource(ResourceType::CO2, 1000, 10)           // index 4
+        Resource(ResourceType::WATER, 1'000'000LL, 0),          // index 0
+        Resource(ResourceType::ENERGY, 5'000'000LL, 0),         // index 1
+        Resource(ResourceType::MONEY, 250'000LL, 0),            // index 2
+        Resource(ResourceType::POPULATION, 1'000'000LL, 0),     // index 3
+        Resource(ResourceType::CO2, 1'000'000LL, 0)             // index 4
     }
     {
         // Static assertions to ensure enum values match array indices
@@ -35,10 +35,26 @@ void ResourceManager::tick()
 
 void ResourceManager::applyEffect(const std::vector<ResourceEffect>& effects) {
     for (const ResourceEffect& effect : effects) {
+        if (effect.type == ResourceType::RESOURCE_UNSPECIFIED) {
+            continue;
+        }
         resources[getIndexForResourceType(effect.type)].changeDeltaPerTick(effect.deltaValue);
     }
 }
 
-int ResourceManager::getResourceValue(ResourceType type) {
+int ResourceManager::getResourceValue(ResourceType type) const {
     return resources[getIndexForResourceType(type)].getCurrentValue();
+}
+
+bool ResourceManager::canAfford(LLint amount) const
+{
+    return getResourceValue(ResourceType::MONEY) >= amount;
+}
+
+void ResourceManager::changeResourceValue(ResourceType type, LLint delta)
+{
+    if (type == ResourceType::RESOURCE_UNSPECIFIED) {
+        return;
+    }
+    resources[getIndexForResourceType(type)].changeCurrentValue(delta);
 }

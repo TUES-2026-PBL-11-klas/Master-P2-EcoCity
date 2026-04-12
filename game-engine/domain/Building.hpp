@@ -6,26 +6,28 @@
 #include "ResourceEffect.hpp"
 #include "BuildingType.hpp"
 
+typedef long long int LLint;
+
 class Building {
     private:
         enum BuildingType type;
-        int buildCost;
+        LLint buildCost;
         int ticksToComplete;
-
-        // Subclasses implement this, but it can't be called directly
-        virtual std::vector<ResourceEffect> createEffects() const = 0;
 
     protected:
         std::vector<ResourceEffect> effects;
 
+        // Subclasses implement this, but it can't be called directly
+        virtual std::vector<ResourceEffect> Effects() const = 0;
+
     public:
-        Building(enum BuildingType type, int buildCost, int ticksToComplete);
+        Building(enum BuildingType type, LLint buildCost, int ticksToComplete);
 
         std::vector<ResourceEffect> buildTick();
 
         enum BuildingType getType() const;
 
-        int getBuildCost() const;
+        LLint getBuildCost() const;
 
         int getTicksToComplete() const;
 

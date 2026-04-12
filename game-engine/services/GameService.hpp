@@ -7,6 +7,8 @@
 #include "PetitionManager.hpp"
 #include "../domain/City.hpp"
 
+#define MAX_CO2 100'000'000LL
+
 class GameService : public IGameService {
     private:
         ResourceManager* resourceManager;

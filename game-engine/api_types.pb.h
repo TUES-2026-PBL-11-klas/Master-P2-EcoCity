@@ -111,6 +111,15 @@ enum BuildingType : int {
   BUILDING_TYPE_POWER_PLANT = 1,
   BUILDING_TYPE_WATER_TREATMENT_PLANT = 2,
   BUILDING_TYPE_SOLAR_PANEL_FARM = 3,
+  BUILDING_TYPE_SOLAR_PANEL_ROOFTOPS = 4,
+  BUILDING_TYPE_PUBLIC_TRANSPORT_UPGRADE = 5,
+  BUILDING_TYPE_WIND_TURBINE_FARM = 6,
+  BUILDING_TYPE_HYDROELECTRIC_PLANT = 7,
+  BUILDING_TYPE_URBAN_GREENING = 8,
+  BUILDING_TYPE_WATER_SAVING_INFRASTRUCTURE = 9,
+  BUILDING_TYPE_INDUSTRIAL_ZONE = 10,
+  BUILDING_TYPE_AIRPORT_EXPANSION = 11,
+  BUILDING_TYPE_ROAD_IMPROVEMENT = 12,
   BuildingType_INT_MIN_SENTINEL_DO_NOT_USE_ =
       ::std::numeric_limits<::int32_t>::min(),
   BuildingType_INT_MAX_SENTINEL_DO_NOT_USE_ =
@@ -121,11 +130,11 @@ extern const uint32_t BuildingType_internal_data_[];
 inline constexpr BuildingType BuildingType_MIN =
     static_cast<BuildingType>(0);
 inline constexpr BuildingType BuildingType_MAX =
-    static_cast<BuildingType>(3);
+    static_cast<BuildingType>(12);
 inline bool BuildingType_IsValid(int value) {
-  return 0 <= value && value <= 3;
+  return 0 <= value && value <= 12;
 }
-inline constexpr int BuildingType_ARRAYSIZE = 3 + 1;
+inline constexpr int BuildingType_ARRAYSIZE = 12 + 1;
 const ::google::protobuf::EnumDescriptor* PROTOBUF_NONNULL BuildingType_descriptor();
 template <typename T>
 const ::std::string& BuildingType_Name(T value) {
@@ -136,7 +145,7 @@ const ::std::string& BuildingType_Name(T value) {
 }
 template <>
 inline const ::std::string& BuildingType_Name(BuildingType value) {
-  return ::google::protobuf::internal::NameOfDenseEnum<BuildingType_descriptor, 0, 3>(
+  return ::google::protobuf::internal::NameOfDenseEnum<BuildingType_descriptor, 0, 12>(
       static_cast<int>(value));
 }
 inline bool BuildingType_Parse(

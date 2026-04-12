@@ -18,7 +18,7 @@ int main() {
     while (!endGame)
     {
         endGame = gameService.tick();
-        std::this_thread::sleep_for(std::chrono::seconds(3)); // Sleep for 3 seconds to simulate time passing in the game
+        std::this_thread::sleep_for(std::chrono::milliseconds(250)); // Sleep for 250 milliseconds to simulate time passing in the game
     }
 
     return 0;

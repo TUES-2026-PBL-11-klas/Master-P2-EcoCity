@@ -3,19 +3,22 @@
 
 #include "ResourceType.hpp"
 
-#define MAX_RESOURCE_VALUE 65536
+typedef long long int LLint;
+
+constexpr LLint MAX_RESOURCE_VALUE = 1'000'000'000LL;
 
 class Resource {
     private:
         ResourceType type;
-        int currentValue;
-        int deltaPerTick;
+        LLint currentValue;
+        LLint deltaPerTick;
     public:
-        Resource(ResourceType type, int amount, int deltaPerTick);
+        Resource(ResourceType type, LLint amount, LLint deltaPerTick);
         ResourceType getType() const;
-        int getCurrentValue() const;
-        int getDeltaValue() const;
-        void changeDeltaPerTick(int delta);
+        LLint getCurrentValue() const;
+        LLint getDeltaValue() const;
+        void changeDeltaPerTick(LLint delta);
+        void changeCurrentValue(LLint delta);
         void changeCurrentValue();
 };
 

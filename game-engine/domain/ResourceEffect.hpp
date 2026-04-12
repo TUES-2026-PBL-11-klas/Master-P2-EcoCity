@@ -3,9 +3,11 @@
 
 #include "ResourceType.hpp"
 
+typedef long long int LLint;
+
 struct ResourceEffect {
     ResourceType type;
-    int deltaValue;
+    LLint deltaValue;
 };
 
 #endif
