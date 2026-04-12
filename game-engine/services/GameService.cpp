@@ -13,8 +13,8 @@ void printResourceSnapshot(const ResourceManager& resourceManager)
 }
 }
 
-GameService::GameService(ResourceManager* resourceManager, PetitionManager* petitionManager, City* city)
-: resourceManager(resourceManager), petitionManager(petitionManager), city(city) {}
+GameService::GameService(ResourceManager* resourceManager, PetitionManager* petitionManager, City* city, SocketServer* socketServer)
+: resourceManager(resourceManager), petitionManager(petitionManager), city(city), socketServer(socketServer) {}
 
 bool GameService::tick()
 {
@@ -27,6 +27,9 @@ bool GameService::tick()
     }
 
     resourceManager->tick();
+
+    // Send updated game state to UI after every tick
+    socketServer->sendGameState(buildGameState());
 
     printResourceSnapshot(*resourceManager);
 
@@ -47,5 +50,60 @@ bool GameService::checkGameOver()
 
 void GameService::readPlayerInput()
 {
-    return; // Placeholder for future implementation of player input handling
+    auto action = socketServer->pollAction();
+    if (!action.has_value()) return;
+
+    const game_api::v1::UIAction& uiAction = action.value();
+
+    if (uiAction.has_petition_response()) {
+        const auto& response = uiAction.petition_response();
+        if (response.responded()) {
+            if (response.accepted()) {
+                petitionManager->acceptPetition();
+                std::cout << "[Input] Petition accepted.\n";
+            } else {
+                petitionManager->rejectPetition();
+                std::cout << "[Input] Petition rejected.\n";
+            }
+        }
+    }
+
+    if (uiAction.save_game()) {
+        std::cout << "[Input] Save requested by UI.\n";
+        // The actual save call happens in main — set a flag here if needed
+        // For now just log; wire up to MongoGameRepository via a callback if desired
+    }
+}
+
+game_api::v1::GameState GameService::buildGameState() const
+{
+    game_api::v1::GameState state;
+
+    // Building counts from City
+    for (const auto& [type, count] : city->getBuildings()) {
+        (*state.mutable_building_counts())[static_cast<int>(type)] = count;
+    }
+
+    // Current petition
+    const Petition* petition = petitionManager->getCurrentPetition();
+    if (petition != nullptr && petition->getBuilding() != nullptr) {
+        game_api::v1::Petition* protoPetition = state.mutable_current_petition();
+        protoPetition->set_id(petition->getId());
+
+        game_api::v1::Building* protoBuilding = protoPetition->mutable_building();
+        const Building* building = petition->getBuilding();
+        protoBuilding->set_type(
+            static_cast<game_api::v1::BuildingType>(building->getType()));
+        protoBuilding->set_build_cost(static_cast<int32_t>(building->getBuildCost()));
+        protoBuilding->set_ticks_to_complete(building->getTicksToComplete());
+
+        for (const ResourceEffect& effect : building->getEffects()) {
+            game_api::v1::ResourceEffect* protoEffect = protoBuilding->add_effects();
+            protoEffect->set_resource_type(
+                static_cast<game_api::v1::ResourceType>(effect.type));
+            protoEffect->set_delta_value(static_cast<int32_t>(effect.deltaValue));
+        }
+    }
+
+    return state;
 }

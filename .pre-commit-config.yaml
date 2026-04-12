@@ -16,6 +16,8 @@ repos:
           - "--suppress=missingIncludeSystem"
           - "--enable=warning,performance,portability"
           - "--suppress=uninitMemberVar:game-engine/domain/Resource.cpp" # False positive
+          - "--suppress=preprocessorErrorDirective:game-engine/api_types.pb.h"
+          - "--suppress=*:game-engine/api_types.pb.cc"
   - repo: https://github.com/bufbuild/buf
     rev: v1.66.1
     hooks:
