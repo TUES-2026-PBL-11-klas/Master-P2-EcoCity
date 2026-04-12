@@ -55,10 +55,27 @@ Petition* PetitionManager::getCurrentPetition() const
     return currentPetition;
 }
 
-Petition* PetitionManager::generatePetition() // This needs to be implemented. Placeholder, should return a new Petition based on game logic
+Petition* PetitionManager::generatePetition()
 {
-    Building* building = new PowerPlant();
-    return new Petition(nextPetitionId++, building);
+    static const std::array<BuildingType, 12> buildingPool = {
+        POWER_PLANT,
+        WATER_TREATMENT_PLANT,
+        SOLAR_PANEL_FARM,
+        SOLAR_PANEL_ROOFTOPS,
+        PUBLIC_TRANSPORT_UPGRADE,
+        WIND_TURBINE_FARM,
+        HYDROELECTRIC_PLANT,
+        URBAN_GREENING,
+        WATER_SAVING_INFRASTRUCTURE,
+        INDUSTRIAL_ZONE,
+        AIRPORT_EXPANSION,
+        ROAD_IMPROVEMENT
+    };
+
+    std::uniform_int_distribution<std::size_t> distribution(0, buildingPool.size() - 1);
+    const BuildingType buildingType = buildingPool[distribution(randomEngine)];
+
+    return new Petition(nextPetitionId++, createBuilding(buildingType));
 }
 
 PetitionManager::~PetitionManager() {

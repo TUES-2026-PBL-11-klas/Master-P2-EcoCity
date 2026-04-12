@@ -5,10 +5,10 @@
 #include <random>
 #include <utility>
 #include <vector>
+#include <array>
 
 #include "../domain/Petition.hpp"
-// #include "../domain/buildings/BuildingFactory.hpp"
-#include "../domain/buildings/PowerPlant.hpp" // Temporary, should be replaced with a more flexible solution for generating petitions with different building types
+#include "../domain/buildings/BuildingFactory.hpp"
 
 struct CompletedConstruction {
     BuildingType type;

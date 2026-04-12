@@ -18,7 +18,7 @@ class Building {
         std::vector<ResourceEffect> effects;
 
         // Subclasses implement this, but it can't be called directly
-        virtual std::vector<ResourceEffect> createEffects() const = 0;
+        virtual std::vector<ResourceEffect> Effects() const = 0;
 
     public:
         Building(enum BuildingType type, LLint buildCost, int ticksToComplete);
