@@ -25,7 +25,8 @@ SRCS := main.cpp \
         services/GameService.cpp \
         services/PetitionManager.cpp \
         services/ResourceManager.cpp \
-        persistence/MongoGameRepository.cpp
+        persistence/MongoGameRepository.cpp \
+		network/SocketServer.cpp
 
 BUILDING_SRCS := domain/buildings/AirportExpansion.cpp \
 				domain/buildings/HydroelectricPlant.cpp \
