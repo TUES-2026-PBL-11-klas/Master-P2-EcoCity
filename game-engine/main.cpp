@@ -7,17 +7,20 @@
 #include "services/GameService.hpp"
 #include "domain/City.hpp"
 #include "persistence/MongoGameRepository.hpp"
+#include "network/SocketServer.hpp"
 
 int main() {
     const std::string mongoConnectionString = "mongodb://localhost:27017/";
     const std::string databaseName = "Eco_city_game";
     const std::string gameId = "local_game";
+    const int uiPort = 54321;
 
     ResourceManager resourceManager;
     PetitionManager petitionManager;
     City city;
+    SocketServer socketServer(uiPort);
 
-    GameService gameService(&resourceManager, &petitionManager, &city);
+    GameService gameService(&resourceManager, &petitionManager, &city, &socketServer);
     MongoGameRepository gameRepository(mongoConnectionString, databaseName);
 
     gameRepository.saveGame(gameId, resourceManager, petitionManager, city);
