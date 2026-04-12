@@ -10,6 +10,7 @@ Building* Petition::getBuilding() const
 {
     return building;
 }
+
 int Petition::getId() const
 {
     return id;

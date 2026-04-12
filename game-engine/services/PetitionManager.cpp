@@ -55,6 +55,11 @@ Petition* PetitionManager::getCurrentPetition() const
     return currentPetition;
 }
 
+const std::vector<Petition*>& PetitionManager::getUnderConstructionPetitions() const
+{
+    return underConstructionPetitions;
+}
+
 Petition* PetitionManager::generatePetition()
 {
     static const std::array<BuildingType, 12> buildingPool = {

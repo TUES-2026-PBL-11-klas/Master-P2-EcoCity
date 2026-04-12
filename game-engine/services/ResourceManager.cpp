@@ -58,3 +58,8 @@ void ResourceManager::changeResourceValue(ResourceType type, LLint delta)
     }
     resources[getIndexForResourceType(type)].changeCurrentValue(delta);
 }
+
+const ResourceManager::ResourceArray& ResourceManager::getResources() const
+{
+    return resources;
+}

@@ -29,6 +29,7 @@ class PetitionManager {
         void rejectPetition();
         Petition* generatePetition();
         Petition* getCurrentPetition() const;
+        const std::vector<Petition*>& getUnderConstructionPetitions() const;
         ~PetitionManager();
 
         PetitionManager(const PetitionManager&) = delete;

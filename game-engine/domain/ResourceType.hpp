@@ -10,7 +10,7 @@
 // - CO2 is measured in 5-ton units
 // - POPULATION is measured in people
 
-enum ResourceType{
+enum ResourceType {
     RESOURCE_UNSPECIFIED,
     WATER,
     ENERGY,

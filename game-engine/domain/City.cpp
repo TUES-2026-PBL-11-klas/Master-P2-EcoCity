@@ -26,3 +26,8 @@ int City::getBuildingCount(BuildingType type) const
 {
     return buildings.at(type);
 }
+
+const std::unordered_map<BuildingType, int>& City::getBuildings() const
+{
+    return buildings;
+}
