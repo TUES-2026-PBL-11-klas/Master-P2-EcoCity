@@ -50,9 +50,8 @@ bool GameService::checkGameOver()
 
 void GameService::readPlayerInput()
 {
-    auto action = socketServer->pollAction();
+    auto action = socketServer->pollAction();   // returns optional if empty returns immediately, else we extract the UIAction
     if (!action.has_value()) return;
-
     const game_api::v1::UIAction& uiAction = action.value();
 
     if (uiAction.has_petition_response()) {
