@@ -18,13 +18,15 @@ int main() {
     ResourceManager resourceManager;
     PetitionManager petitionManager;
     City city;
+
     SocketServer socketServer(uiPort);
 
-    GameService gameService(&resourceManager, &petitionManager, &city, &socketServer);
     MongoGameRepository gameRepository(mongoConnectionString, databaseName);
 
     gameRepository.saveGame(gameId, resourceManager, petitionManager, city);
     std::cout << "Saved initial game state to MongoDB with game_id=" << gameId << std::endl;
+
+    GameService gameService(&resourceManager, &petitionManager, &city, &socketServer, &gameRepository, gameId);
 
     bool endGame = false;
     while (!endGame)
