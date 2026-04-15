@@ -30,6 +30,16 @@ class PetitionManager {
         Petition* generatePetition();
         Petition* getCurrentPetition() const;
         const std::vector<Petition*>& getUnderConstructionPetitions() const;
+
+        // Takes ownership of the petition and places it in the under-construction queue
+        // Used only during game-state restore from MongoDB
+        void restoreUnderConstruction(Petition* petition);
+
+        // Replaces the current petition with the one loaded from MongoDB
+        // Deletes any petition that was auto-generated at construction time
+        // Takes ownership of the supplied petition
+        void restoreCurrentPetition(Petition* petition);
+
         ~PetitionManager();
 
         PetitionManager(const PetitionManager&) = delete;

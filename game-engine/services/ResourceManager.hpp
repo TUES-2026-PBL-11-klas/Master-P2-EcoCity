@@ -25,8 +25,11 @@ class ResourceManager {
         void applyEffect(const std::vector<ResourceEffect>& effects);
         void changeResourceValue(ResourceType type, LLint delta);
         bool canAfford(LLint amount) const;
-        int getResourceValue(ResourceType type) const;
+        LLint getResourceValue(ResourceType type) const;
         const ResourceArray& getResources() const;
+
+        LLint getDeltaForResourceType(ResourceType type) const;
+        void setDeltaForResourceType(ResourceType type, LLint delta);
 };
 
 #endif

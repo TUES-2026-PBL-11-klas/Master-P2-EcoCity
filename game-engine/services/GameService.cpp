@@ -13,8 +13,10 @@ void printResourceSnapshot(const ResourceManager& resourceManager)
 }
 }
 
-GameService::GameService(ResourceManager* resourceManager, PetitionManager* petitionManager, City* city, SocketServer* socketServer)
-: resourceManager(resourceManager), petitionManager(petitionManager), city(city), socketServer(socketServer) {}
+GameService::GameService(ResourceManager* resourceManager, PetitionManager* petitionManager, City* city, SocketServer* socketServer,
+    MongoGameRepository* gameRepository, const std::string& gameId)
+: resourceManager(resourceManager), petitionManager(petitionManager), city(city), socketServer(socketServer),
+gameRepository(gameRepository), gameId(gameId) {}
 
 bool GameService::tick()
 {
@@ -68,9 +70,8 @@ void GameService::readPlayerInput()
     }
 
     if (uiAction.save_game()) {
-        std::cout << "[Input] Save requested by UI.\n";
-        // The actual save call happens in main — set a flag here if needed
-        // For now just log; wire up to MongoGameRepository via a callback if desired
+        gameRepository->saveGame(gameId, *resourceManager, *petitionManager, *city);
+        std::cout << "[Input] Game saved to MongoDB.\n";
     }
 }
 
