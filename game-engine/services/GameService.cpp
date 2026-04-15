@@ -30,6 +30,8 @@ bool GameService::tick()
 
     resourceManager->tick();
 
+    handlePopulationScaling();
+
     // Send updated game state to UI after every tick
     socketServer->sendGameState(buildGameState());
 
@@ -106,4 +108,34 @@ game_api::v1::GameState GameService::buildGameState() const
     }
 
     return state;
+}
+
+void GameService::handlePopulationScaling() {
+    long long int currentPop = resourceManager->getResourceValue(POPULATION);
+
+    if (currentPop >= nextPopulationGoal) {
+        nextPopulationGoal = static_cast<long long int>(nextPopulationGoal * SCALING_FACTOR);
+
+        double demandIncrease = 1.10; 
+
+        for (auto& resource : *resourceManager) {
+            ResourceType type = resource.getType();
+   
+            if (type == WATER || type == ENERGY) {
+                long long int currentDelta = resource.getDeltaValue();
+                
+                
+                    long long int newDelta = static_cast<long long int>(currentDelta * demandIncrease);
+                    
+                    resourceManager->applyEffect({{type, newDelta - currentDelta}});
+            }
+            if(type == CO2) {
+                long long int currentDelta = resource.getDeltaValue();
+            
+                    long long int newDelta = static_cast<long long int>(currentDelta * demandIncrease);
+                    resourceManager->applyEffect({{type, newDelta + currentDelta}});
+            }
+        }
+        std::cout << "[Balance] Population reached milestone! New goal: " << nextPopulationGoal << "\n";
+    }
 }
