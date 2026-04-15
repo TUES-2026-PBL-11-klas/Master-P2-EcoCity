@@ -90,3 +90,27 @@ PetitionManager::~PetitionManager() {
         delete petition;
     }
 }
+
+
+// Restore helpers
+
+void PetitionManager::restoreUnderConstruction(Petition* petition)
+{
+    underConstructionPetitions.push_back(petition);
+    // Advance nextPetitionId past any restored IDs so new petitions never
+    // reuse an ID that already exists in the database.
+    if (petition->getId() >= nextPetitionId) {
+        nextPetitionId = petition->getId() + 1;
+    }
+}
+
+void PetitionManager::restoreCurrentPetition(Petition* petition)
+{
+    // Discard the petition that was auto-generated at construction time.
+    delete currentPetition;
+    currentPetition = petition;
+
+    if (petition->getId() >= nextPetitionId) {
+        nextPetitionId = petition->getId() + 1;
+    }
+}
