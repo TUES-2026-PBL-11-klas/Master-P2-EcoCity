@@ -18,6 +18,11 @@ LLint Resource::getDeltaValue() const
     return this->deltaPerTick;
 }
 
+void Resource::setDeltaPerTick(LLint delta)
+{
+    this->deltaPerTick = delta;
+}
+
 void Resource::changeDeltaPerTick(LLint delta)
 {
     this->deltaPerTick += delta;

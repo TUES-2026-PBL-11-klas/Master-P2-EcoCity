@@ -10,6 +10,9 @@
 #include <mongocxx/v_noabi/mongocxx/cursor.hpp>
 #include <mongocxx/v_noabi/mongocxx/database.hpp>
 #include <mongocxx/v_noabi/mongocxx/options/replace.hpp>
+#include <mongocxx/v_noabi/mongocxx/client.hpp>
+#include <mongocxx/v_noabi/mongocxx/instance.hpp>
+#include <mongocxx/v_noabi/mongocxx/uri.hpp>
 
 #include "../domain/Building.hpp"
 #include "../domain/BuildingType.hpp"
@@ -130,7 +133,7 @@ std::string getString(const bsoncxx::document::view& doc, const std::string& key
 {
     auto it = doc.find(key);
     if (it == doc.end()) return "";
-    if (it->type() != bsoncxx::type::k_utf8) return "";
+    if (it->type() != bsoncxx::type::k_string) return "";
     return std::string(it->get_string().value);
 }
 
@@ -139,12 +142,12 @@ long long getNumber(const bsoncxx::document::view& doc, const std::string& key)
 {
     auto it = doc.find(key);
     if (it == doc.end()) return 0;
-    switch (it->type()) {
-        case bsoncxx::type::k_double: return static_cast<long long>(it->get_double().value);
-        case bsoncxx::type::k_int32:  return it->get_int32().value;
-        case bsoncxx::type::k_int64:  return it->get_int64().value;
-        default:                      return 0;
-    }
+
+    if (it->type() == bsoncxx::type::k_int64) return it->get_int64().value;
+    if (it->type() == bsoncxx::type::k_int32) return it->get_int32().value;
+    if (it->type() == bsoncxx::type::k_double) return static_cast<long long>(it->get_double().value);
+
+    return 0;
 }
 
 // Read one petition row into a SavedGame::PetitionData.

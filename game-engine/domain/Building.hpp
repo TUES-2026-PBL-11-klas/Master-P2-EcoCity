@@ -33,6 +33,9 @@ class Building {
 
         const std::vector<ResourceEffect>& getEffects() const;
 
+        void setTicksToComplete(int ticks);
+        void setBuildCost(LLint cost);
+
         virtual ~Building() = default;
 };
 

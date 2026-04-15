@@ -42,7 +42,7 @@ void ResourceManager::applyEffect(const std::vector<ResourceEffect>& effects) {
     }
 }
 
-int ResourceManager::getResourceValue(ResourceType type) const {
+LLint ResourceManager::getResourceValue(ResourceType type) const {
     return resources[getIndexForResourceType(type)].getCurrentValue();
 }
 
@@ -62,4 +62,14 @@ void ResourceManager::changeResourceValue(ResourceType type, LLint delta)
 const ResourceManager::ResourceArray& ResourceManager::getResources() const
 {
     return resources;
+}
+
+LLint ResourceManager::getDeltaForResourceType(ResourceType type) const
+{
+    return resources[getIndexForResourceType(type)].getDeltaValue();
+}
+
+void ResourceManager::setDeltaForResourceType(ResourceType type, LLint delta)
+{
+    resources[getIndexForResourceType(type)].setDeltaPerTick(delta);
 }
