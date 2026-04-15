@@ -30,6 +30,8 @@ bool GameService::tick()
 
     resourceManager->tick();
 
+    handlePopulationScaling();
+
     // Send updated game state to UI after every tick
     socketServer->sendGameState(buildGameState());
 
@@ -106,4 +108,45 @@ game_api::v1::GameState GameService::buildGameState() const
     }
 
     return state;
+}
+
+void GameService::handlePopulationScaling() {
+    long long int currentPop = resourceManager->getResourceValue(POPULATION);
+
+    if (currentPop >= nextPopulationGoal) {
+        nextPopulationGoal = static_cast<long long int>(nextPopulationGoal * SCALING_FACTOR);
+
+        for (auto& resource : *resourceManager) {
+            ResourceType type = resource.getType();
+            long long int newDelta;
+            long long int currentDelta = resource.getDeltaValue();
+            if (type == WATER || type == ENERGY) {
+
+                if(currentDelta < 0){
+                    newDelta = static_cast<long long int>(currentDelta * demandIncrease);
+                }
+                else{
+                    newDelta = static_cast<long long int>(currentDelta * (2 - demandIncrease));
+                }
+                resourceManager->setDeltaForResourceType(type, newDelta);
+            }
+            else if (type == CO2) {
+                if(currentDelta > 0)
+                {
+                    newDelta = static_cast<long long int>(currentDelta * demandIncrease);
+                    resourceManager->setDeltaForResourceType(type, newDelta);
+                }
+                else {
+                    newDelta = currentDelta - static_cast<long long int>(currentDelta * (2 - demandIncrease));
+                    resourceManager->setDeltaForResourceType(type, newDelta);
+                }
+            }
+            else if(type == MONEY)
+            {
+                newDelta = static_cast<long long int>(currentDelta * demandIncrease);
+                resourceManager->setDeltaForResourceType(type, newDelta);
+            }
+        }
+        std::cout << "[Balance] Population reached milestone! New goal: " << nextPopulationGoal << "\n";
+    }
 }
