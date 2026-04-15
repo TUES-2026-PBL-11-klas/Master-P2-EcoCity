@@ -34,3 +34,15 @@ const std::vector<ResourceEffect>& Building::getEffects() const
 {
     return effects;
 }
+
+void Building::setTicksToComplete(int ticks)
+{
+    if(ticks < 0) ticks = 0;
+    this->ticksToComplete = ticks;
+}
+
+void Building::setBuildCost(LLint cost)
+{
+    if(cost < 0) cost = 0;
+    this->buildCost = cost;
+}

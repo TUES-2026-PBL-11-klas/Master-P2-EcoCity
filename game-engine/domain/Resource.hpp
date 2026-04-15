@@ -17,6 +17,7 @@ class Resource {
         ResourceType getType() const;
         LLint getCurrentValue() const;
         LLint getDeltaValue() const;
+        void setDeltaPerTick(LLint delta);
         void changeDeltaPerTick(LLint delta);
         void changeCurrentValue(LLint delta);
         void changeCurrentValue();
