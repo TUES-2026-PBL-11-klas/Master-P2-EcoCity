@@ -115,18 +115,18 @@ void GameService::handlePopulationScaling() {
 
     if (currentPop >= nextPopulationGoal) {
         nextPopulationGoal = static_cast<long long int>(nextPopulationGoal * SCALING_FACTOR);
-        
+
         for (auto& resource : *resourceManager) {
             ResourceType type = resource.getType();
             long long int newDelta;
             long long int currentDelta = resource.getDeltaValue();
             if (type == WATER || type == ENERGY) {
-                
-                if(currentDelta < 0){ 
+
+                if(currentDelta < 0){
                     newDelta = static_cast<long long int>(currentDelta * demandIncrease);
                 }
                 else{
-                    newDelta = currentDelta - static_cast<long long int>(currentDelta * (demandIncrease - 1));
+                    newDelta = static_cast<long long int>(currentDelta * (2 - demandIncrease));
                 }
                 resourceManager->setDeltaForResourceType(type, newDelta);
             }
@@ -137,7 +137,7 @@ void GameService::handlePopulationScaling() {
                     resourceManager->setDeltaForResourceType(type, newDelta);
                 }
                 else {
-                    newDelta = currentDelta - static_cast<long long int>(currentDelta * (demandIncrease - 1));
+                    newDelta = currentDelta - static_cast<long long int>(currentDelta * (2 - demandIncrease));
                     resourceManager->setDeltaForResourceType(type, newDelta);
                 }
             }
