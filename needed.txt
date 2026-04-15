@@ -1,3 +1,4 @@
 cpp: g++
 proto: protoc, protobuf runtime
 rust: rustc/cargo
+tests: Google Test (gtest)
