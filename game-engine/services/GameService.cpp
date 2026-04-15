@@ -115,25 +115,36 @@ void GameService::handlePopulationScaling() {
 
     if (currentPop >= nextPopulationGoal) {
         nextPopulationGoal = static_cast<long long int>(nextPopulationGoal * SCALING_FACTOR);
-
-        double demandIncrease = 1.10; 
-
+        
         for (auto& resource : *resourceManager) {
             ResourceType type = resource.getType();
-   
+            long long int newDelta;
+            long long int currentDelta = resource.getDeltaValue();
             if (type == WATER || type == ENERGY) {
-                long long int currentDelta = resource.getDeltaValue();
                 
-                
-                    long long int newDelta = static_cast<long long int>(currentDelta * demandIncrease);
-                    
-                    resourceManager->applyEffect({{type, newDelta - currentDelta}});
+                if(currentDelta < 0){ 
+                    newDelta = static_cast<long long int>(currentDelta * demandIncrease);
+                }
+                else{
+                    newDelta = currentDelta - static_cast<long long int>(currentDelta * (demandIncrease - 1));
+                }
+                resourceManager->setDeltaForResourceType(type, newDelta);
             }
-            if(type == CO2) {
-                long long int currentDelta = resource.getDeltaValue();
-            
-                    long long int newDelta = static_cast<long long int>(currentDelta * demandIncrease);
-                    resourceManager->applyEffect({{type, newDelta + currentDelta}});
+            else if (type == CO2) {
+                if(currentDelta > 0)
+                {
+                    newDelta = static_cast<long long int>(currentDelta * demandIncrease);
+                    resourceManager->setDeltaForResourceType(type, newDelta);
+                }
+                else {
+                    newDelta = currentDelta - static_cast<long long int>(currentDelta * (demandIncrease - 1));
+                    resourceManager->setDeltaForResourceType(type, newDelta);
+                }
+            }
+            else if(type == MONEY)
+            {
+                newDelta = static_cast<long long int>(currentDelta * demandIncrease);
+                resourceManager->setDeltaForResourceType(type, newDelta);
             }
         }
         std::cout << "[Balance] Population reached milestone! New goal: " << nextPopulationGoal << "\n";

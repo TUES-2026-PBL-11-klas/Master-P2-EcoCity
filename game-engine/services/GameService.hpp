@@ -10,6 +10,7 @@
 
 #define MAX_CO2 100'000'000LL
 const double SCALING_FACTOR = 1.2;
+const double demandIncrease = 1.10; 
 
 class GameService : public IGameService {
     private:
