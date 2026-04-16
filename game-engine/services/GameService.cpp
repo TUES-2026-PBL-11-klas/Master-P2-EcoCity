@@ -16,11 +16,21 @@ void printResourceSnapshot(const ResourceManager& resourceManager)
 }
 
 GameService::GameService(ResourceManager* resourceManager, PetitionManager* petitionManager, City* city, SocketServer* socketServer,
-    MongoGameRepository* gameRepository, const std::string& gameId, std::ofstream metricsFile_)
+    MongoGameRepository* gameRepository, const std::string& gameId)
 : resourceManager(resourceManager), petitionManager(petitionManager), city(city), socketServer(socketServer),
-gameRepository(gameRepository), gameId(gameId), metricsFile_("metrics.csv", std::ios::app)
+gameRepository(gameRepository), gameId(gameId)
 {
-    // Write CSV header if file is new/empty
+    auto now = std::chrono::system_clock::now();
+    auto ms  = std::chrono::duration_cast<std::chrono::milliseconds>(
+                now.time_since_epoch()).count();
+
+    std::string filename = "metrics/game_" + std::to_string(ms) + ".csv";
+
+    metricsFile_.open(filename, std::ios::app);
+    if (!metricsFile_.is_open()) {
+        throw std::runtime_error("Failed to open metrics file: " + filename);
+    }
+
     if (metricsFile_.tellp() == 0) {
         metricsFile_ << "tick,money,energy,water,co2,population\n";
     }

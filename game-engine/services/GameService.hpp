@@ -36,7 +36,7 @@ class GameService : public IGameService {
 
     public:
         GameService(ResourceManager* resourceManager, PetitionManager* petitionManager, City* city, SocketServer* socketServer,
-                    MongoGameRepository* gameRepository, const std::string& gameId, std::ofstream metricsFile_);
+                    MongoGameRepository* gameRepository, const std::string& gameId);
         bool tick() override;
         void readPlayerInput() override;
         void handlePopulationScaling();
