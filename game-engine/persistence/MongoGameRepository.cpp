@@ -21,6 +21,8 @@
 #include "../domain/ResourceEffect.hpp"
 #include "../domain/ResourceType.hpp"
 
+#include "../Logger.hpp"
+
 using bsoncxx::builder::basic::document;
 using bsoncxx::builder::basic::kvp;
 
@@ -223,6 +225,8 @@ void MongoGameRepository::saveGame(
             buildPetitionDocument(gameId, *petitionManager.getCurrentPetition()).extract()
         );
     }
+
+    LOG_INFO("MongoGameRepository", "game_saved", "game_id=" + gameId);
 }
 
 SavedGame MongoGameRepository::loadGame(const std::string& gameId)
@@ -285,6 +289,8 @@ SavedGame MongoGameRepository::loadGame(const std::string& gameId)
               << result.underConstructionPetitions.size() << " buildings under construction, "
               << "current petition: " << (result.hasCurrentPetition ? "yes" : "none")
               << "\n";
+
+    LOG_INFO("MongoGameRepository", "game_loaded", "game_id=" + gameId);
 
     return result;
 }

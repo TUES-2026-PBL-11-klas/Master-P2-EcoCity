@@ -1,4 +1,5 @@
 #include "GameService.hpp"
+#include "../Logger.hpp"
 #include <iostream>
 
 namespace {
@@ -37,6 +38,8 @@ bool GameService::tick()
 
     printResourceSnapshot(*resourceManager);
 
+    LOG_DEBUG("GameService", "tick_complete");
+
     return checkGameOver();
 }
 
@@ -45,11 +48,18 @@ bool GameService::checkGameOver()
     for(const Resource& resource : *resourceManager)
     {
         if (resource.getCurrentValue() <= 0 && resource.getType() != CO2) {
+            LOG_WARN("GameService", "game_over", "reason=resource_depleted");
             return true;    // Game over if any resource except CO2 is depleted
         }
     }
 
-    return resourceManager->getResourceValue(CO2) >= MAX_CO2; // Game over if CO2 reaches limit
+    if(resourceManager->getResourceValue(CO2) >= MAX_CO2) // Game over if CO2 reaches limit
+    {
+        LOG_WARN("GameService", "game_over", "reason=co2_limit_exceeded");
+        return true;
+    }
+
+    return false;   // Game continues otherwise
 }
 
 void GameService::readPlayerInput()
@@ -63,17 +73,20 @@ void GameService::readPlayerInput()
         if (response.responded()) {
             if (response.accepted()) {
                 petitionManager->acceptPetition();
-                std::cout << "[Input] Petition accepted.\n";
+                // std::cout << "[Input] Petition accepted.\n";
+                LOG_INFO("GameService", "petition_accepted");
             } else {
                 petitionManager->rejectPetition();
-                std::cout << "[Input] Petition rejected.\n";
+                // std::cout << "[Input] Petition rejected.\n";
+                LOG_INFO("GameService", "petition_rejected");
             }
         }
     }
 
     if (uiAction.save_game()) {
         gameRepository->saveGame(gameId, *resourceManager, *petitionManager, *city);
-        std::cout << "[Input] Game saved to MongoDB.\n";
+        // std::cout << "[Input] Game saved to MongoDB.\n";
+        LOG_INFO("GameService", "game_saved");
     }
 }
 
@@ -147,6 +160,7 @@ void GameService::handlePopulationScaling() {
                 resourceManager->setDeltaForResourceType(type, newDelta);
             }
         }
-        std::cout << "[Balance] Population reached milestone! New goal: " << nextPopulationGoal << "\n";
+        // std::cout << "[Balance] Population reached milestone! New goal: " << nextPopulationGoal << "\n";
+        LOG_DEBUG("GameService", "population_milestone_reached", "new_goal=" + std::to_string(nextPopulationGoal));
     }
 }
