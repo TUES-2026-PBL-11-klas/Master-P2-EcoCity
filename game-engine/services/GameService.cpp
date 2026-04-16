@@ -1,5 +1,6 @@
 #include "GameService.hpp"
 #include "../Logger.hpp"
+#include "../Tracer.hpp"
 #include <iostream>
 
 namespace {
@@ -21,6 +22,8 @@ gameRepository(gameRepository), gameId(gameId) {}
 
 bool GameService::tick()
 {
+    TRACE("GameService", "tick");
+
     readPlayerInput();
 
     const std::vector<CompletedConstruction> completedConstructions = petitionManager->tick();

@@ -1,5 +1,6 @@
 #include "PetitionManager.hpp"
 #include "../Logger.hpp"
+#include "../Tracer.hpp"
 
 PetitionManager::PetitionManager()
 : currentPetition(nullptr), randomEngine(std::random_device{}()), nextPetitionId(1)
@@ -10,6 +11,8 @@ PetitionManager::PetitionManager()
 // Returns effects of the completed petitions
 std::vector<CompletedConstruction> PetitionManager::tick()
 {
+    TRACE("PetitionManager", "tick");
+
     std::vector<Petition*> petitionsToRemove;
     std::vector<CompletedConstruction> completedConstructions;
     for (auto& petition : underConstructionPetitions) {

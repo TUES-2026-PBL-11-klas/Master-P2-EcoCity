@@ -22,6 +22,7 @@
 #include "../domain/ResourceType.hpp"
 
 #include "../Logger.hpp"
+#include "../Tracer.hpp"
 
 using bsoncxx::builder::basic::document;
 using bsoncxx::builder::basic::kvp;
@@ -174,6 +175,8 @@ void MongoGameRepository::saveGame(
     const PetitionManager& petitionManager,
     const City& city)
 {
+    TRACE("MongoGameRepository", "saveGame");
+
     mongocxx::database database = client[databaseName];
 
     mongocxx::options::replace replaceOptions;
@@ -231,6 +234,8 @@ void MongoGameRepository::saveGame(
 
 SavedGame MongoGameRepository::loadGame(const std::string& gameId)
 {
+    TRACE("MongoGameRepository", "loadGame");
+
     SavedGame result{};
     result.found = false;
 
