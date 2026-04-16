@@ -16,9 +16,15 @@ void printResourceSnapshot(const ResourceManager& resourceManager)
 }
 
 GameService::GameService(ResourceManager* resourceManager, PetitionManager* petitionManager, City* city, SocketServer* socketServer,
-    MongoGameRepository* gameRepository, const std::string& gameId)
+    MongoGameRepository* gameRepository, const std::string& gameId, std::ofstream metricsFile_)
 : resourceManager(resourceManager), petitionManager(petitionManager), city(city), socketServer(socketServer),
-gameRepository(gameRepository), gameId(gameId) {}
+gameRepository(gameRepository), gameId(gameId), metricsFile_("metrics.csv", std::ios::app)
+{
+    // Write CSV header if file is new/empty
+    if (metricsFile_.tellp() == 0) {
+        metricsFile_ << "tick,money,energy,water,co2,population\n";
+    }
+}
 
 bool GameService::tick()
 {
@@ -42,6 +48,15 @@ bool GameService::tick()
     printResourceSnapshot(*resourceManager);
 
     LOG_DEBUG("GameService", "tick_complete");
+
+    metricsFile_ << ++tickCount_
+    << "," << resourceManager->getResourceValue(MONEY)
+    << "," << resourceManager->getResourceValue(ENERGY)
+    << "," << resourceManager->getResourceValue(WATER)
+    << "," << resourceManager->getResourceValue(CO2)
+    << "," << resourceManager->getResourceValue(POPULATION)
+    << "\n";
+    metricsFile_.flush();
 
     return checkGameOver();
 }
