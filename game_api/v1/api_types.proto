@@ -52,8 +52,7 @@ message Petition {
 
 message GameState {
   map<int32, int32> building_counts = 1; // key = BuildingType value
-  ResourceType resource_type = 2;
-  int32 resource_amount = 3;
+  map<int32, int32> resources = 5;
   Petition current_petition = 4;
 }
 

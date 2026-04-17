@@ -148,6 +148,11 @@ game_api::v1::GameState GameService::buildGameState() const
         }
     }
 
+    for (const Resource& resource : *resourceManager) {
+        (*state.mutable_resources())[resource.getType()] =
+            static_cast<int32_t>(resource.getCurrentValue());
+    }
+
     return state;
 }
 

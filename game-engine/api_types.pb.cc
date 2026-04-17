@@ -79,6 +79,24 @@ struct PetitionResponseDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 PetitionResponseDefaultTypeInternal _PetitionResponse_default_instance_;
 template <typename>
+PROTOBUF_CONSTEXPR GameState_ResourcesEntry_DoNotUse::GameState_ResourcesEntry_DoNotUse(::_pbi::ConstantInitialized)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : GameState_ResourcesEntry_DoNotUse::MapEntry(GameState_ResourcesEntry_DoNotUse_class_data_.base()){}
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : GameState_ResourcesEntry_DoNotUse::MapEntry() {
+}
+#endif  // PROTOBUF_CUSTOM_VTABLE
+struct GameState_ResourcesEntry_DoNotUseDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR GameState_ResourcesEntry_DoNotUseDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~GameState_ResourcesEntry_DoNotUseDefaultTypeInternal() {}
+  union {
+    GameState_ResourcesEntry_DoNotUse _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 GameState_ResourcesEntry_DoNotUseDefaultTypeInternal _GameState_ResourcesEntry_DoNotUse_default_instance_;
+template <typename>
 PROTOBUF_CONSTEXPR GameState_BuildingCountsEntry_DoNotUse::GameState_BuildingCountsEntry_DoNotUse(::_pbi::ConstantInitialized)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
     : GameState_BuildingCountsEntry_DoNotUse::MapEntry(GameState_BuildingCountsEntry_DoNotUse_class_data_.base()){}
@@ -181,9 +199,8 @@ inline constexpr GameState::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
       : _cached_size_{0},
         current_petition_{nullptr},
-        resource_type_{static_cast< ::game_api::v1::ResourceType >(0)},
-        resource_amount_{0},
-        building_counts_{} {}
+        building_counts_{},
+        resources_{} {}
 
 template <typename>
 PROTOBUF_CONSTEXPR GameState::GameState(::_pbi::ConstantInitialized)
@@ -246,13 +263,18 @@ const ::uint32_t
         0,
         1,
         0x081, // bitmap
+        PROTOBUF_FIELD_OFFSET(::game_api::v1::GameState_ResourcesEntry_DoNotUse, _impl_._has_bits_),
+        5, // hasbit index offset
+        PROTOBUF_FIELD_OFFSET(::game_api::v1::GameState_ResourcesEntry_DoNotUse, _impl_.key_),
+        PROTOBUF_FIELD_OFFSET(::game_api::v1::GameState_ResourcesEntry_DoNotUse, _impl_.value_),
+        0,
+        1,
+        0x081, // bitmap
         PROTOBUF_FIELD_OFFSET(::game_api::v1::GameState, _impl_._has_bits_),
-        7, // hasbit index offset
+        6, // hasbit index offset
         PROTOBUF_FIELD_OFFSET(::game_api::v1::GameState, _impl_.building_counts_),
-        PROTOBUF_FIELD_OFFSET(::game_api::v1::GameState, _impl_.resource_type_),
-        PROTOBUF_FIELD_OFFSET(::game_api::v1::GameState, _impl_.resource_amount_),
+        PROTOBUF_FIELD_OFFSET(::game_api::v1::GameState, _impl_.resources_),
         PROTOBUF_FIELD_OFFSET(::game_api::v1::GameState, _impl_.current_petition_),
-        3,
         1,
         2,
         0,
@@ -278,15 +300,17 @@ static const ::_pbi::MigrationSchema
         {7, sizeof(::game_api::v1::Building)},
         {18, sizeof(::game_api::v1::Petition)},
         {25, sizeof(::game_api::v1::GameState_BuildingCountsEntry_DoNotUse)},
-        {32, sizeof(::game_api::v1::GameState)},
-        {43, sizeof(::game_api::v1::PetitionResponse)},
-        {50, sizeof(::game_api::v1::UIAction)},
+        {32, sizeof(::game_api::v1::GameState_ResourcesEntry_DoNotUse)},
+        {39, sizeof(::game_api::v1::GameState)},
+        {48, sizeof(::game_api::v1::PetitionResponse)},
+        {55, sizeof(::game_api::v1::UIAction)},
 };
 static const ::_pb::Message* PROTOBUF_NONNULL const file_default_instances[] = {
     &::game_api::v1::_ResourceEffect_default_instance_._instance,
     &::game_api::v1::_Building_default_instance_._instance,
     &::game_api::v1::_Petition_default_instance_._instance,
     &::game_api::v1::_GameState_BuildingCountsEntry_DoNotUse_default_instance_._instance,
+    &::game_api::v1::_GameState_ResourcesEntry_DoNotUse_default_instance_._instance,
     &::game_api::v1::_GameState_default_instance_._instance,
     &::game_api::v1::_PetitionResponse_default_instance_._instance,
     &::game_api::v1::_UIAction_default_instance_._instance,
@@ -301,46 +325,47 @@ const char descriptor_table_protodef_api_5ftypes_2eproto[] ABSL_ATTRIBUTE_SECTIO
     "ks_to_complete\030\003 \001(\005\022,\n\007effects\030\004 \003(\0132\033."
     "game_api.v1.ResourceEffect\"\?\n\010Petition\022\n"
     "\n\002id\030\001 \001(\005\022\'\n\010building\030\002 \001(\0132\025.game_api."
-    "v1.Building\"\203\002\n\tGameState\022C\n\017building_co"
+    "v1.Building\"\244\002\n\tGameState\022C\n\017building_co"
     "unts\030\001 \003(\0132*.game_api.v1.GameState.Build"
-    "ingCountsEntry\0220\n\rresource_type\030\002 \001(\0162\031."
-    "game_api.v1.ResourceType\022\027\n\017resource_amo"
-    "unt\030\003 \001(\005\022/\n\020current_petition\030\004 \001(\0132\025.ga"
-    "me_api.v1.Petition\0325\n\023BuildingCountsEntr"
-    "y\022\013\n\003key\030\001 \001(\005\022\r\n\005value\030\002 \001(\005:\0028\001\"7\n\020Pet"
-    "itionResponse\022\021\n\tresponded\030\001 \001(\010\022\020\n\010acce"
-    "pted\030\002 \001(\010\"W\n\010UIAction\0228\n\021petition_respo"
-    "nse\030\001 \001(\0132\035.game_api.v1.PetitionResponse"
-    "\022\021\n\tsave_game\030\002 \001(\010*\366\003\n\014BuildingType\022\035\n\031"
-    "BUILDING_TYPE_UNSPECIFIED\020\000\022\035\n\031BUILDING_"
-    "TYPE_POWER_PLANT\020\001\022\'\n#BUILDING_TYPE_WATE"
-    "R_TREATMENT_PLANT\020\002\022\"\n\036BUILDING_TYPE_SOL"
-    "AR_PANEL_FARM\020\003\022&\n\"BUILDING_TYPE_SOLAR_P"
-    "ANEL_ROOFTOPS\020\004\022*\n&BUILDING_TYPE_PUBLIC_"
-    "TRANSPORT_UPGRADE\020\005\022#\n\037BUILDING_TYPE_WIN"
-    "D_TURBINE_FARM\020\006\022%\n!BUILDING_TYPE_HYDROE"
-    "LECTRIC_PLANT\020\007\022 \n\034BUILDING_TYPE_URBAN_G"
-    "REENING\020\010\022-\n)BUILDING_TYPE_WATER_SAVING_"
-    "INFRASTRUCTURE\020\t\022!\n\035BUILDING_TYPE_INDUST"
-    "RIAL_ZONE\020\n\022#\n\037BUILDING_TYPE_AIRPORT_EXP"
-    "ANSION\020\013\022\"\n\036BUILDING_TYPE_ROAD_IMPROVEME"
-    "NT\020\014*\256\001\n\014ResourceType\022\035\n\031RESOURCE_TYPE_U"
-    "NSPECIFIED\020\000\022\027\n\023RESOURCE_TYPE_WATER\020\001\022\030\n"
-    "\024RESOURCE_TYPE_ENERGY\020\002\022\027\n\023RESOURCE_TYPE"
-    "_MONEY\020\003\022\034\n\030RESOURCE_TYPE_POPULATION\020\004\022\025"
-    "\n\021RESOURCE_TYPE_CO2\020\005b\006proto3"
+    "ingCountsEntry\0228\n\tresources\030\005 \003(\0132%.game"
+    "_api.v1.GameState.ResourcesEntry\022/\n\020curr"
+    "ent_petition\030\004 \001(\0132\025.game_api.v1.Petitio"
+    "n\0325\n\023BuildingCountsEntry\022\013\n\003key\030\001 \001(\005\022\r\n"
+    "\005value\030\002 \001(\005:\0028\001\0320\n\016ResourcesEntry\022\013\n\003ke"
+    "y\030\001 \001(\005\022\r\n\005value\030\002 \001(\005:\0028\001\"7\n\020PetitionRe"
+    "sponse\022\021\n\tresponded\030\001 \001(\010\022\020\n\010accepted\030\002 "
+    "\001(\010\"W\n\010UIAction\0228\n\021petition_response\030\001 \001"
+    "(\0132\035.game_api.v1.PetitionResponse\022\021\n\tsav"
+    "e_game\030\002 \001(\010*\366\003\n\014BuildingType\022\035\n\031BUILDIN"
+    "G_TYPE_UNSPECIFIED\020\000\022\035\n\031BUILDING_TYPE_PO"
+    "WER_PLANT\020\001\022\'\n#BUILDING_TYPE_WATER_TREAT"
+    "MENT_PLANT\020\002\022\"\n\036BUILDING_TYPE_SOLAR_PANE"
+    "L_FARM\020\003\022&\n\"BUILDING_TYPE_SOLAR_PANEL_RO"
+    "OFTOPS\020\004\022*\n&BUILDING_TYPE_PUBLIC_TRANSPO"
+    "RT_UPGRADE\020\005\022#\n\037BUILDING_TYPE_WIND_TURBI"
+    "NE_FARM\020\006\022%\n!BUILDING_TYPE_HYDROELECTRIC"
+    "_PLANT\020\007\022 \n\034BUILDING_TYPE_URBAN_GREENING"
+    "\020\010\022-\n)BUILDING_TYPE_WATER_SAVING_INFRAST"
+    "RUCTURE\020\t\022!\n\035BUILDING_TYPE_INDUSTRIAL_ZO"
+    "NE\020\n\022#\n\037BUILDING_TYPE_AIRPORT_EXPANSION\020"
+    "\013\022\"\n\036BUILDING_TYPE_ROAD_IMPROVEMENT\020\014*\256\001"
+    "\n\014ResourceType\022\035\n\031RESOURCE_TYPE_UNSPECIF"
+    "IED\020\000\022\027\n\023RESOURCE_TYPE_WATER\020\001\022\030\n\024RESOUR"
+    "CE_TYPE_ENERGY\020\002\022\027\n\023RESOURCE_TYPE_MONEY\020"
+    "\003\022\034\n\030RESOURCE_TYPE_POPULATION\020\004\022\025\n\021RESOU"
+    "RCE_TYPE_CO2\020\005b\006proto3"
 };
 static ::absl::once_flag descriptor_table_api_5ftypes_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_api_5ftypes_2eproto = {
     false,
     false,
-    1429,
+    1462,
     descriptor_table_protodef_api_5ftypes_2eproto,
     "api_types.proto",
     &descriptor_table_api_5ftypes_2eproto_once,
     nullptr,
     0,
-    7,
+    8,
     schemas,
     file_default_instances,
     TableStruct_api_5ftypes_2eproto::offsets,
@@ -1454,6 +1479,100 @@ GameState_BuildingCountsEntry_DoNotUse::_table_ = {
 };
 // ===================================================================
 
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+GameState_ResourcesEntry_DoNotUse::GameState_ResourcesEntry_DoNotUse()
+    : SuperType(GameState_ResourcesEntry_DoNotUse_class_data_.base()) {}
+GameState_ResourcesEntry_DoNotUse::GameState_ResourcesEntry_DoNotUse(::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
+    : SuperType(arena, GameState_ResourcesEntry_DoNotUse_class_data_.base()) {}
+#else   // PROTOBUF_CUSTOM_VTABLE
+GameState_ResourcesEntry_DoNotUse::GameState_ResourcesEntry_DoNotUse() : SuperType() {}
+GameState_ResourcesEntry_DoNotUse::GameState_ResourcesEntry_DoNotUse(::google::protobuf::Arena* PROTOBUF_NULLABLE arena) : SuperType(arena) {}
+#endif  // PROTOBUF_CUSTOM_VTABLE
+inline void* PROTOBUF_NONNULL GameState_ResourcesEntry_DoNotUse::PlacementNew_(
+    const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
+    ::google::protobuf::Arena* PROTOBUF_NULLABLE arena) {
+  return ::new (mem) GameState_ResourcesEntry_DoNotUse(arena);
+}
+constexpr auto GameState_ResourcesEntry_DoNotUse::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(GameState_ResourcesEntry_DoNotUse),
+                                            alignof(GameState_ResourcesEntry_DoNotUse));
+}
+constexpr auto GameState_ResourcesEntry_DoNotUse::InternalGenerateClassData_() {
+  return ::google::protobuf::internal::ClassDataFull{
+      ::google::protobuf::internal::ClassData{
+          &_GameState_ResourcesEntry_DoNotUse_default_instance_._instance,
+          &_table_.header,
+          nullptr,  // OnDemandRegisterArenaDtor
+          nullptr,  // IsInitialized
+          &GameState_ResourcesEntry_DoNotUse::MergeImpl,
+          ::google::protobuf::Message::GetNewImpl<GameState_ResourcesEntry_DoNotUse>(),
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+          &GameState_ResourcesEntry_DoNotUse::SharedDtor,
+          static_cast<void (::google::protobuf::MessageLite::*)()>(&GameState_ResourcesEntry_DoNotUse::ClearImpl),
+              ::google::protobuf::Message::ByteSizeLongImpl, ::google::protobuf::Message::_InternalSerializeImpl
+              ,
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          PROTOBUF_FIELD_OFFSET(GameState_ResourcesEntry_DoNotUse, _impl_._cached_size_),
+          false,
+      },
+      &GameState_ResourcesEntry_DoNotUse::kDescriptorMethods,
+      &descriptor_table_api_5ftypes_2eproto,
+      nullptr,  // tracker
+  };
+}
+
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 const
+    ::google::protobuf::internal::ClassDataFull GameState_ResourcesEntry_DoNotUse_class_data_ =
+        GameState_ResourcesEntry_DoNotUse::InternalGenerateClassData_();
+
+PROTOBUF_ATTRIBUTE_WEAK const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
+GameState_ResourcesEntry_DoNotUse::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&GameState_ResourcesEntry_DoNotUse_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(GameState_ResourcesEntry_DoNotUse_class_data_.tc_table);
+  return GameState_ResourcesEntry_DoNotUse_class_data_.base();
+}
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<1, 2, 0, 0, 2>
+GameState_ResourcesEntry_DoNotUse::_table_ = {
+  {
+    PROTOBUF_FIELD_OFFSET(GameState_ResourcesEntry_DoNotUse, _impl_._has_bits_),
+    0, // no _extensions_
+    2, 8,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967292,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    2,  // num_field_entries
+    0,  // num_aux_entries
+    offsetof(decltype(_table_), field_names),  // no aux_entries
+    GameState_ResourcesEntry_DoNotUse_class_data_.base(),
+    nullptr,  // post_loop_handler
+    ::_pbi::TcParser::DiscardEverythingFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::game_api::v1::GameState_ResourcesEntry_DoNotUse>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    // int32 value = 2;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(GameState_ResourcesEntry_DoNotUse, _impl_.value_), 1>(),
+     {16, 1, 0,
+      PROTOBUF_FIELD_OFFSET(GameState_ResourcesEntry_DoNotUse, _impl_.value_)}},
+    // int32 key = 1;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(GameState_ResourcesEntry_DoNotUse, _impl_.key_), 0>(),
+     {8, 0, 0,
+      PROTOBUF_FIELD_OFFSET(GameState_ResourcesEntry_DoNotUse, _impl_.key_)}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // int32 key = 1;
+    {PROTOBUF_FIELD_OFFSET(GameState_ResourcesEntry_DoNotUse, _impl_.key_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kInt32)},
+    // int32 value = 2;
+    {PROTOBUF_FIELD_OFFSET(GameState_ResourcesEntry_DoNotUse, _impl_.value_), _Internal::kHasBitsOffset + 1, 0, (0 | ::_fl::kFcOptional | ::_fl::kInt32)},
+  }},
+  // no aux_entries
+  {{
+  }},
+};
+// ===================================================================
+
 class GameState::_Internal {
  public:
   using HasBits =
@@ -1477,7 +1596,8 @@ PROTOBUF_NDEBUG_INLINE GameState::Impl_::Impl_(
     [[maybe_unused]] const ::game_api::v1::GameState& from_msg)
       : _has_bits_{from._has_bits_},
         _cached_size_{0},
-        building_counts_{visibility, arena, from.building_counts_} {}
+        building_counts_{visibility, arena, from.building_counts_},
+        resources_{visibility, arena, from.resources_} {}
 
 GameState::GameState(
     ::google::protobuf::Arena* PROTOBUF_NULLABLE arena,
@@ -1496,13 +1616,6 @@ GameState::GameState(
   _impl_.current_petition_ = (CheckHasBit(cached_has_bits, 0x00000001U))
                 ? ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.current_petition_)
                 : nullptr;
-  ::memcpy(reinterpret_cast<char*>(&_impl_) +
-               offsetof(Impl_, resource_type_),
-           reinterpret_cast<const char*>(&from._impl_) +
-               offsetof(Impl_, resource_type_),
-           offsetof(Impl_, resource_amount_) -
-               offsetof(Impl_, resource_type_) +
-               sizeof(Impl_::resource_amount_));
 
   // @@protoc_insertion_point(copy_constructor:game_api.v1.GameState)
 }
@@ -1510,16 +1623,12 @@ PROTOBUF_NDEBUG_INLINE GameState::Impl_::Impl_(
     [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
     [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
       : _cached_size_{0},
-        building_counts_{visibility, arena} {}
+        building_counts_{visibility, arena},
+        resources_{visibility, arena} {}
 
 inline void GameState::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
   new (&_impl_) Impl_(internal_visibility(), arena);
-  ::memset(reinterpret_cast<char*>(&_impl_) +
-               offsetof(Impl_, current_petition_),
-           0,
-           offsetof(Impl_, resource_amount_) -
-               offsetof(Impl_, current_petition_) +
-               sizeof(Impl_::resource_amount_));
+  _impl_.current_petition_ = {};
 }
 GameState::~GameState() {
   // @@protoc_insertion_point(destructor:game_api.v1.GameState)
@@ -1545,6 +1654,10 @@ constexpr auto GameState::InternalNewImpl_() {
   constexpr auto arena_bits = ::google::protobuf::internal::EncodePlacementArenaOffsets({
       PROTOBUF_FIELD_OFFSET(GameState, _impl_.building_counts_) +
           decltype(GameState::_impl_.building_counts_)::
+              InternalGetArenaOffset(
+                  ::google::protobuf::Message::internal_visibility()),
+      PROTOBUF_FIELD_OFFSET(GameState, _impl_.resources_) +
+          decltype(GameState::_impl_.resources_)::
               InternalGetArenaOffset(
                   ::google::protobuf::Message::internal_visibility()),
   });
@@ -1591,17 +1704,17 @@ GameState::GetClassData() const {
   return GameState_class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<2, 4, 2, 0, 2>
+const ::_pbi::TcParseTable<0, 3, 3, 0, 2>
 GameState::_table_ = {
   {
     PROTOBUF_FIELD_OFFSET(GameState, _impl_._has_bits_),
     0, // no _extensions_
-    4, 24,  // max_field_number, fast_idx_mask
+    5, 0,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967280,  // skipmap
+    4294967270,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    4,  // num_field_entries
-    2,  // num_aux_entries
+    3,  // num_field_entries
+    3,  // num_aux_entries
     offsetof(decltype(_table_), aux_entries),
     GameState_class_data_.base(),
     nullptr,  // post_loop_handler
@@ -1614,29 +1727,20 @@ GameState::_table_ = {
     {::_pbi::TcParser::FastMtS1,
      {34, 0, 0,
       PROTOBUF_FIELD_OFFSET(GameState, _impl_.current_petition_)}},
-    {::_pbi::TcParser::MiniParse, {}},
-    // .game_api.v1.ResourceType resource_type = 2;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(GameState, _impl_.resource_type_), 1>(),
-     {16, 1, 0,
-      PROTOBUF_FIELD_OFFSET(GameState, _impl_.resource_type_)}},
-    // int32 resource_amount = 3;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(GameState, _impl_.resource_amount_), 2>(),
-     {24, 2, 0,
-      PROTOBUF_FIELD_OFFSET(GameState, _impl_.resource_amount_)}},
   }}, {{
     65535, 65535
   }}, {{
     // map<int32, int32> building_counts = 1;
-    {PROTOBUF_FIELD_OFFSET(GameState, _impl_.building_counts_), _Internal::kHasBitsOffset + 3, 1, (0 | ::_fl::kFcRepeated | ::_fl::kMap)},
-    // .game_api.v1.ResourceType resource_type = 2;
-    {PROTOBUF_FIELD_OFFSET(GameState, _impl_.resource_type_), _Internal::kHasBitsOffset + 1, 0, (0 | ::_fl::kFcOptional | ::_fl::kOpenEnum)},
-    // int32 resource_amount = 3;
-    {PROTOBUF_FIELD_OFFSET(GameState, _impl_.resource_amount_), _Internal::kHasBitsOffset + 2, 0, (0 | ::_fl::kFcOptional | ::_fl::kInt32)},
+    {PROTOBUF_FIELD_OFFSET(GameState, _impl_.building_counts_), _Internal::kHasBitsOffset + 1, 1, (0 | ::_fl::kFcRepeated | ::_fl::kMap)},
     // .game_api.v1.Petition current_petition = 4;
     {PROTOBUF_FIELD_OFFSET(GameState, _impl_.current_petition_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
+    // map<int32, int32> resources = 5;
+    {PROTOBUF_FIELD_OFFSET(GameState, _impl_.resources_), _Internal::kHasBitsOffset + 2, 2, (0 | ::_fl::kFcRepeated | ::_fl::kMap)},
   }},
   {{
       {::_pbi::TcParser::GetTable<::game_api::v1::Petition>()},
+      {::_pbi::TcParser::GetMapAuxInfo(
+          0, 0, 5, 5, 0)},
       {::_pbi::TcParser::GetMapAuxInfo(
           0, 0, 5, 5, 0)},
   }},
@@ -1651,16 +1755,16 @@ PROTOBUF_NOINLINE void GameState::Clear() {
   (void) cached_has_bits;
 
   cached_has_bits = _impl_._has_bits_[0];
-  if (CheckHasBit(cached_has_bits, 0x00000001U)) {
-    ABSL_DCHECK(_impl_.current_petition_ != nullptr);
-    _impl_.current_petition_->Clear();
-  }
-  if (BatchCheckHasBit(cached_has_bits, 0x0000000eU)) {
-    ::memset(&_impl_.resource_type_, 0, static_cast<::size_t>(
-        reinterpret_cast<char*>(&_impl_.resource_amount_) -
-        reinterpret_cast<char*>(&_impl_.resource_type_)) + sizeof(_impl_.resource_amount_));
-    if (CheckHasBitForRepeated(cached_has_bits, 0x00000008U)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x00000007U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000001U)) {
+      ABSL_DCHECK(_impl_.current_petition_ != nullptr);
+      _impl_.current_petition_->Clear();
+    }
+    if (CheckHasBitForRepeated(cached_has_bits, 0x00000002U)) {
       _impl_.building_counts_.Clear();
+    }
+    if (CheckHasBitForRepeated(cached_has_bits, 0x00000004U)) {
+      _impl_.resources_.Clear();
     }
   }
   _impl_._has_bits_.Clear();
@@ -1687,7 +1791,7 @@ PROTOBUF_NOINLINE void GameState::Clear() {
 
   cached_has_bits = this_._impl_._has_bits_[0];
   // map<int32, int32> building_counts = 1;
-  if (CheckHasBitForRepeated(cached_has_bits, 0x00000008U)) {
+  if (CheckHasBitForRepeated(cached_has_bits, 0x00000002U)) {
     if (!this_._internal_building_counts().empty()) {
       using MapType = ::google::protobuf::Map<::int32_t, ::int32_t>;
       using WireHelper = _pbi::MapEntryFuncs<::int32_t, ::int32_t,
@@ -1709,29 +1813,34 @@ PROTOBUF_NOINLINE void GameState::Clear() {
     }
   }
 
-  // .game_api.v1.ResourceType resource_type = 2;
-  if (CheckHasBit(cached_has_bits, 0x00000002U)) {
-    if (this_._internal_resource_type() != 0) {
-      target = stream->EnsureSpace(target);
-      target = ::_pbi::WireFormatLite::WriteEnumToArray(
-          2, this_._internal_resource_type(), target);
-    }
-  }
-
-  // int32 resource_amount = 3;
-  if (CheckHasBit(cached_has_bits, 0x00000004U)) {
-    if (this_._internal_resource_amount() != 0) {
-      target =
-          ::google::protobuf::internal::WireFormatLite::WriteInt32ToArrayWithField<3>(
-              stream, this_._internal_resource_amount(), target);
-    }
-  }
-
   // .game_api.v1.Petition current_petition = 4;
   if (CheckHasBit(cached_has_bits, 0x00000001U)) {
     target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
         4, *this_._impl_.current_petition_, this_._impl_.current_petition_->GetCachedSize(), target,
         stream);
+  }
+
+  // map<int32, int32> resources = 5;
+  if (CheckHasBitForRepeated(cached_has_bits, 0x00000004U)) {
+    if (!this_._internal_resources().empty()) {
+      using MapType = ::google::protobuf::Map<::int32_t, ::int32_t>;
+      using WireHelper = _pbi::MapEntryFuncs<::int32_t, ::int32_t,
+                                     _pbi::WireFormatLite::TYPE_INT32,
+                                     _pbi::WireFormatLite::TYPE_INT32>;
+      const auto& field = this_._internal_resources();
+
+      if (stream->IsSerializationDeterministic() && field.size() > 1) {
+        for (const auto& entry : ::google::protobuf::internal::MapSorterFlat<MapType>(field)) {
+          target = WireHelper::InternalSerialize(
+              5, entry.first, entry.second, target, stream);
+        }
+      } else {
+        for (const auto& entry : field) {
+          target = WireHelper::InternalSerialize(
+              5, entry.first, entry.second, target, stream);
+        }
+      }
+    }
   }
 
   if (ABSL_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
@@ -1759,31 +1868,27 @@ PROTOBUF_NOINLINE void GameState::Clear() {
 
   ::_pbi::Prefetch5LinesFrom7Lines(&this_);
   cached_has_bits = this_._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x0000000fU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x00000007U)) {
     // .game_api.v1.Petition current_petition = 4;
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       total_size += 1 +
                     ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.current_petition_);
     }
-    // .game_api.v1.ResourceType resource_type = 2;
-    if (CheckHasBit(cached_has_bits, 0x00000002U)) {
-      if (this_._internal_resource_type() != 0) {
-        total_size += 1 +
-                      ::_pbi::WireFormatLite::EnumSize(this_._internal_resource_type());
-      }
-    }
-    // int32 resource_amount = 3;
-    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
-      if (this_._internal_resource_amount() != 0) {
-        total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
-            this_._internal_resource_amount());
-      }
-    }
     // map<int32, int32> building_counts = 1;
-    if (CheckHasBitForRepeated(cached_has_bits, 0x00000008U)) {
+    if (CheckHasBitForRepeated(cached_has_bits, 0x00000002U)) {
       total_size +=
           1 * ::google::protobuf::internal::FromIntSize(this_._internal_building_counts_size());
       for (const auto& entry : this_._internal_building_counts()) {
+        total_size += _pbi::MapEntryFuncs<::int32_t, ::int32_t,
+                                       _pbi::WireFormatLite::TYPE_INT32,
+                                       _pbi::WireFormatLite::TYPE_INT32>::ByteSizeLong(entry.first, entry.second);
+      }
+    }
+    // map<int32, int32> resources = 5;
+    if (CheckHasBitForRepeated(cached_has_bits, 0x00000004U)) {
+      total_size +=
+          1 * ::google::protobuf::internal::FromIntSize(this_._internal_resources_size());
+      for (const auto& entry : this_._internal_resources()) {
         total_size += _pbi::MapEntryFuncs<::int32_t, ::int32_t,
                                        _pbi::WireFormatLite::TYPE_INT32,
                                        _pbi::WireFormatLite::TYPE_INT32>::ByteSizeLong(entry.first, entry.second);
@@ -1809,7 +1914,7 @@ void GameState::MergeImpl(::google::protobuf::MessageLite& to_msg,
   (void)cached_has_bits;
 
   cached_has_bits = from._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x0000000fU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x00000007U)) {
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       ABSL_DCHECK(from._impl_.current_petition_ != nullptr);
       if (_this->_impl_.current_petition_ == nullptr) {
@@ -1818,18 +1923,11 @@ void GameState::MergeImpl(::google::protobuf::MessageLite& to_msg,
         _this->_impl_.current_petition_->MergeFrom(*from._impl_.current_petition_);
       }
     }
-    if (CheckHasBit(cached_has_bits, 0x00000002U)) {
-      if (from._internal_resource_type() != 0) {
-        _this->_impl_.resource_type_ = from._impl_.resource_type_;
-      }
-    }
-    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
-      if (from._internal_resource_amount() != 0) {
-        _this->_impl_.resource_amount_ = from._impl_.resource_amount_;
-      }
-    }
-    if (CheckHasBitForRepeated(cached_has_bits, 0x00000008U)) {
+    if (CheckHasBitForRepeated(cached_has_bits, 0x00000002U)) {
       _this->_impl_.building_counts_.MergeFrom(from._impl_.building_counts_);
+    }
+    if (CheckHasBitForRepeated(cached_has_bits, 0x00000004U)) {
+      _this->_impl_.resources_.MergeFrom(from._impl_.resources_);
     }
   }
   _this->_impl_._has_bits_[0] |= cached_has_bits;
@@ -1849,13 +1947,9 @@ void GameState::InternalSwap(GameState* PROTOBUF_RESTRICT PROTOBUF_NONNULL other
   using ::std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
-  ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(GameState, _impl_.resource_amount_)
-      + sizeof(GameState::_impl_.resource_amount_)
-      - PROTOBUF_FIELD_OFFSET(GameState, _impl_.current_petition_)>(
-          reinterpret_cast<char*>(&_impl_.current_petition_),
-          reinterpret_cast<char*>(&other->_impl_.current_petition_));
+  swap(_impl_.current_petition_, other->_impl_.current_petition_);
   _impl_.building_counts_.InternalSwap(&other->_impl_.building_counts_);
+  _impl_.resources_.InternalSwap(&other->_impl_.resources_);
 }
 
 ::google::protobuf::Metadata GameState::GetMetadata() const {

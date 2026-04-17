@@ -75,6 +75,10 @@ class GameState_BuildingCountsEntry_DoNotUse;
 struct GameState_BuildingCountsEntry_DoNotUseDefaultTypeInternal;
 extern GameState_BuildingCountsEntry_DoNotUseDefaultTypeInternal _GameState_BuildingCountsEntry_DoNotUse_default_instance_;
 extern const ::google::protobuf::internal::ClassDataFull GameState_BuildingCountsEntry_DoNotUse_class_data_;
+class GameState_ResourcesEntry_DoNotUse;
+struct GameState_ResourcesEntry_DoNotUseDefaultTypeInternal;
+extern GameState_ResourcesEntry_DoNotUseDefaultTypeInternal _GameState_ResourcesEntry_DoNotUse_default_instance_;
+extern const ::google::protobuf::internal::ClassDataFull GameState_ResourcesEntry_DoNotUse_class_data_;
 class Petition;
 struct PetitionDefaultTypeInternal;
 extern PetitionDefaultTypeInternal _Petition_default_instance_;
@@ -456,7 +460,7 @@ class PetitionResponse final : public ::google::protobuf::Message
     return *reinterpret_cast<const PetitionResponse*>(
         &_PetitionResponse_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 5;
+  static constexpr int kIndexInFileMessages = 6;
   friend void swap(PetitionResponse& a, PetitionResponse& b) { a.Swap(&b); }
   inline void Swap(PetitionResponse* PROTOBUF_NONNULL other) {
     if (other == this) return;
@@ -603,6 +607,45 @@ class PetitionResponse final : public ::google::protobuf::Message
 extern const ::google::protobuf::internal::ClassDataFull PetitionResponse_class_data_;
 // -------------------------------------------------------------------
 
+class GameState_ResourcesEntry_DoNotUse final
+    : public ::google::protobuf::internal::MapEntry<::int32_t, ::int32_t,
+                             ::google::protobuf::internal::WireFormatLite::TYPE_INT32,
+                             ::google::protobuf::internal::WireFormatLite::TYPE_INT32> {
+ public:
+  using SuperType =
+      ::google::protobuf::internal::MapEntry<::int32_t, ::int32_t,
+                      ::google::protobuf::internal::WireFormatLite::TYPE_INT32,
+                      ::google::protobuf::internal::WireFormatLite::TYPE_INT32>;
+  GameState_ResourcesEntry_DoNotUse();
+  template <typename = void>
+  explicit PROTOBUF_CONSTEXPR GameState_ResourcesEntry_DoNotUse(::google::protobuf::internal::ConstantInitialized);
+  explicit GameState_ResourcesEntry_DoNotUse(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  static constexpr const void* PROTOBUF_NONNULL internal_default_instance() {
+    return &_GameState_ResourcesEntry_DoNotUse_default_instance_;
+  }
+
+
+  static constexpr auto InternalGenerateClassData_();
+
+ private:
+  friend class ::google::protobuf::MessageLite;
+  friend struct ::TableStruct_api_5ftypes_2eproto;
+
+  friend class ::google::protobuf::internal::TcParser;
+  static const ::google::protobuf::internal::TcParseTable<1, 2,
+                                   0, 0,
+                                   2>
+      _table_;
+
+  const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetClassData() const PROTOBUF_FINAL;
+  static void* PROTOBUF_NONNULL PlacementNew_(
+      const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
+      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  static constexpr auto InternalNewImpl_();
+};
+extern const ::google::protobuf::internal::ClassDataFull GameState_ResourcesEntry_DoNotUse_class_data_;
+// -------------------------------------------------------------------
+
 class GameState_BuildingCountsEntry_DoNotUse final
     : public ::google::protobuf::internal::MapEntry<::int32_t, ::int32_t,
                              ::google::protobuf::internal::WireFormatLite::TYPE_INT32,
@@ -697,7 +740,7 @@ class UIAction final : public ::google::protobuf::Message
     return *reinterpret_cast<const UIAction*>(
         &_UIAction_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 6;
+  static constexpr int kIndexInFileMessages = 7;
   friend void swap(UIAction& a, UIAction& b) { a.Swap(&b); }
   inline void Swap(UIAction* PROTOBUF_NONNULL other) {
     if (other == this) return;
@@ -1344,7 +1387,7 @@ class GameState final : public ::google::protobuf::Message
     return *reinterpret_cast<const GameState*>(
         &_GameState_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 4;
+  static constexpr int kIndexInFileMessages = 5;
   friend void swap(GameState& a, GameState& b) { a.Swap(&b); }
   inline void Swap(GameState* PROTOBUF_NONNULL other) {
     if (other == this) return;
@@ -1432,9 +1475,8 @@ class GameState final : public ::google::protobuf::Message
   // accessors -------------------------------------------------------
   enum : int {
     kCurrentPetitionFieldNumber = 4,
-    kResourceTypeFieldNumber = 2,
-    kResourceAmountFieldNumber = 3,
     kBuildingCountsFieldNumber = 1,
+    kResourcesFieldNumber = 5,
   };
   // .game_api.v1.Petition current_petition = 4;
   bool has_current_petition() const;
@@ -1449,26 +1491,6 @@ class GameState final : public ::google::protobuf::Message
   private:
   const ::game_api::v1::Petition& _internal_current_petition() const;
   ::game_api::v1::Petition* PROTOBUF_NONNULL _internal_mutable_current_petition();
-
-  public:
-  // .game_api.v1.ResourceType resource_type = 2;
-  void clear_resource_type() ;
-  ::game_api::v1::ResourceType resource_type() const;
-  void set_resource_type(::game_api::v1::ResourceType value);
-
-  private:
-  ::game_api::v1::ResourceType _internal_resource_type() const;
-  void _internal_set_resource_type(::game_api::v1::ResourceType value);
-
-  public:
-  // int32 resource_amount = 3;
-  void clear_resource_amount() ;
-  ::int32_t resource_amount() const;
-  void set_resource_amount(::int32_t value);
-
-  private:
-  ::int32_t _internal_resource_amount() const;
-  void _internal_set_resource_amount(::int32_t value);
 
   public:
   // map<int32, int32> building_counts = 1;
@@ -1486,12 +1508,27 @@ class GameState final : public ::google::protobuf::Message
   ::google::protobuf::Map<::int32_t, ::int32_t>* PROTOBUF_NONNULL _internal_mutable_building_counts();
 
   public:
+  // map<int32, int32> resources = 5;
+  int resources_size() const;
+  private:
+  int _internal_resources_size() const;
+
+  public:
+  void clear_resources() ;
+  const ::google::protobuf::Map<::int32_t, ::int32_t>& resources() const;
+  ::google::protobuf::Map<::int32_t, ::int32_t>* PROTOBUF_NONNULL mutable_resources();
+
+  private:
+  const ::google::protobuf::Map<::int32_t, ::int32_t>& _internal_resources() const;
+  ::google::protobuf::Map<::int32_t, ::int32_t>* PROTOBUF_NONNULL _internal_mutable_resources();
+
+  public:
   // @@protoc_insertion_point(class_scope:game_api.v1.GameState)
  private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<2, 4,
-                                   2, 0,
+  static const ::google::protobuf::internal::TcParseTable<0, 3,
+                                   3, 0,
                                    2>
       _table_;
 
@@ -1513,12 +1550,14 @@ class GameState final : public ::google::protobuf::Message
     ::google::protobuf::internal::HasBits<1> _has_bits_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     ::game_api::v1::Petition* PROTOBUF_NULLABLE current_petition_;
-    int resource_type_;
-    ::int32_t resource_amount_;
     ::google::protobuf::internal::MapField<GameState_BuildingCountsEntry_DoNotUse, ::int32_t, ::int32_t,
                       ::google::protobuf::internal::WireFormatLite::TYPE_INT32,
                       ::google::protobuf::internal::WireFormatLite::TYPE_INT32>
         building_counts_;
+    ::google::protobuf::internal::MapField<GameState_ResourcesEntry_DoNotUse, ::int32_t, ::int32_t,
+                      ::google::protobuf::internal::WireFormatLite::TYPE_INT32,
+                      ::google::protobuf::internal::WireFormatLite::TYPE_INT32>
+        resources_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
   union { Impl_ _impl_; };
@@ -1860,6 +1899,8 @@ inline void Petition::set_allocated_building(::game_api::v1::Building* PROTOBUF_
 
 // -------------------------------------------------------------------
 
+// -------------------------------------------------------------------
+
 // GameState
 
 // map<int32, int32> building_counts = 1;
@@ -1873,7 +1914,7 @@ inline void GameState::clear_building_counts() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.building_counts_.Clear();
   ClearHasBitForRepeated(_impl_._has_bits_[0],
-                  0x00000008U);
+                  0x00000002U);
 }
 inline const ::google::protobuf::Map<::int32_t, ::int32_t>& GameState::_internal_building_counts() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
@@ -1889,59 +1930,41 @@ inline ::google::protobuf::Map<::int32_t, ::int32_t>* PROTOBUF_NONNULL GameState
 }
 inline ::google::protobuf::Map<::int32_t, ::int32_t>* PROTOBUF_NONNULL GameState::mutable_building_counts()
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  SetHasBitForRepeated(_impl_._has_bits_[0], 0x00000008U);
+  SetHasBitForRepeated(_impl_._has_bits_[0], 0x00000002U);
   // @@protoc_insertion_point(field_mutable_map:game_api.v1.GameState.building_counts)
   return _internal_mutable_building_counts();
 }
 
-// .game_api.v1.ResourceType resource_type = 2;
-inline void GameState::clear_resource_type() {
+// map<int32, int32> resources = 5;
+inline int GameState::_internal_resources_size() const {
+  return _internal_resources().size();
+}
+inline int GameState::resources_size() const {
+  return _internal_resources_size();
+}
+inline void GameState::clear_resources() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.resource_type_ = 0;
-  ClearHasBit(_impl_._has_bits_[0],
-                  0x00000002U);
-}
-inline ::game_api::v1::ResourceType GameState::resource_type() const {
-  // @@protoc_insertion_point(field_get:game_api.v1.GameState.resource_type)
-  return _internal_resource_type();
-}
-inline void GameState::set_resource_type(::game_api::v1::ResourceType value) {
-  _internal_set_resource_type(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000002U);
-  // @@protoc_insertion_point(field_set:game_api.v1.GameState.resource_type)
-}
-inline ::game_api::v1::ResourceType GameState::_internal_resource_type() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  return static_cast<::game_api::v1::ResourceType>(_impl_.resource_type_);
-}
-inline void GameState::_internal_set_resource_type(::game_api::v1::ResourceType value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.resource_type_ = value;
-}
-
-// int32 resource_amount = 3;
-inline void GameState::clear_resource_amount() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.resource_amount_ = 0;
-  ClearHasBit(_impl_._has_bits_[0],
+  _impl_.resources_.Clear();
+  ClearHasBitForRepeated(_impl_._has_bits_[0],
                   0x00000004U);
 }
-inline ::int32_t GameState::resource_amount() const {
-  // @@protoc_insertion_point(field_get:game_api.v1.GameState.resource_amount)
-  return _internal_resource_amount();
-}
-inline void GameState::set_resource_amount(::int32_t value) {
-  _internal_set_resource_amount(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000004U);
-  // @@protoc_insertion_point(field_set:game_api.v1.GameState.resource_amount)
-}
-inline ::int32_t GameState::_internal_resource_amount() const {
+inline const ::google::protobuf::Map<::int32_t, ::int32_t>& GameState::_internal_resources() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.resource_amount_;
+  return _impl_.resources_.GetMap();
 }
-inline void GameState::_internal_set_resource_amount(::int32_t value) {
+inline const ::google::protobuf::Map<::int32_t, ::int32_t>& GameState::resources() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_map:game_api.v1.GameState.resources)
+  return _internal_resources();
+}
+inline ::google::protobuf::Map<::int32_t, ::int32_t>* PROTOBUF_NONNULL GameState::_internal_mutable_resources() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.resource_amount_ = value;
+  return _impl_.resources_.MutableMap();
+}
+inline ::google::protobuf::Map<::int32_t, ::int32_t>* PROTOBUF_NONNULL GameState::mutable_resources()
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  SetHasBitForRepeated(_impl_._has_bits_[0], 0x00000004U);
+  // @@protoc_insertion_point(field_mutable_map:game_api.v1.GameState.resources)
+  return _internal_mutable_resources();
 }
 
 // .game_api.v1.Petition current_petition = 4;
