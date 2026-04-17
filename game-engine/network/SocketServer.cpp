@@ -2,6 +2,8 @@
 #include <iostream>
 #include <cstring>
 
+#include "../Logger.hpp"
+
 #ifdef _WIN32
     #include <winsock2.h>
     #include <ws2tcpip.h>
@@ -49,7 +51,8 @@ void SocketServer::listenLoop()
     // Create socket, AF_INET == IPv4, SOCK_STREAM == TCP
     serverFd = socket(AF_INET, SOCK_STREAM, 0);
     if (serverFd == INVALID_SOCKET) {
-        std::cerr << "Failed to create socket\n";
+        // std::cerr << "Failed to create socket\n";
+        LOG_ERROR("SocketServer", "socket_fail", "socket_creation_failed");
         return;
     }
 
@@ -68,23 +71,30 @@ void SocketServer::listenLoop()
     addr.sin_port = htons(port);
 
     if (bind(serverFd, (sockaddr*)&addr, sizeof(addr)) == SOCKET_ERROR) {
-        std::cerr << "Bind failed\n";
+        // std::cerr << "Bind failed\n";
+        LOG_ERROR("SocketServer", "socket_fail", "socket_bind_failed");
         return;
     }
 
     listen(serverFd, 1); // Listen for incoming connections, backlog of 1 is enough since we only expect one client UI
-    std::cout << "Waiting for UI connection on port " << port << "...\n";
+    // std::cout << "Waiting for UI connection on port " << port << "...\n";
+    LOG_INFO("SocketServer", "waiting_connection", "port=" + std::to_string(port));
 
     sockaddr_in clientAddr{};
     socklen_t clientLen = sizeof(clientAddr);
     clientFd = accept(serverFd, (sockaddr*)&clientAddr, &clientLen);    // Wait for a client to connect
     if (clientFd == INVALID_SOCKET) return;
 
-    std::cout << "UI connected.\n";
+    // std::cout << "UI connected.\n";
+    LOG_INFO("SocketServer", "ui_connected");
 
     while (running) {
         std::string data = receiveMessage();
-        if (data.empty()) break;  // UI disconnected
+        if (data.empty())
+        {
+            LOG_WARN("SocketServer", "ui_disconnected");
+            break;  // UI disconnected
+        }
 
         game_api::v1::UIAction action;
         if (action.ParseFromString(data)) {
@@ -128,6 +138,9 @@ std::string SocketServer::receiveMessage()
         if (n <= 0) return "";
         received += n;
     }
+
+    LOG_DEBUG("SocketServer", "received_message", "length=" + std::to_string(length));
+
     return data;
 }
 
@@ -150,6 +163,8 @@ bool SocketServer::sendBytes(const std::string& data)
         if (send(clientFd, header, 4, 0) == SOCKET_ERROR) return false;
         if (send(clientFd, data.c_str(), length, 0) == SOCKET_ERROR) return false;
     #endif
+
+    LOG_DEBUG("SocketServer", "sent_message", "length=" + std::to_string(length));
 
     return true;
 }

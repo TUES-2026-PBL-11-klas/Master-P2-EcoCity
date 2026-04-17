@@ -9,6 +9,7 @@
 #include "domain/buildings/BuildingFactory.hpp"
 #include "persistence/MongoGameRepository.hpp"
 #include "network/SocketServer.hpp"
+#include "Logger.hpp"
 
 // Restoring petitions under construction is the trickiest part because Building
 // counts down ticksToComplete internally.  We create a fresh building with
@@ -72,7 +73,8 @@ static void restoreGame(
         petitionManager.restoreCurrentPetition(petition);
     }
 
-    std::cout << "[Restore] Game state applied successfully.\n";
+    // std::cout << "[Restore] Game state applied successfully.\n";
+    LOG_INFO("main", "restoreGame", "Game state applied successfully from save.");
 }
 
 int main() {
@@ -93,14 +95,17 @@ int main() {
     SavedGame save = gameRepository.loadGame(gameId);
     if (save.found)
     {
-        std::cout << "[Main] Resuming saved game...\n";
+        // std::cout << "[Main] Resuming saved game...\n";
+        LOG_INFO("main", "loadGame", "Saved game found, resuming.");
         restoreGame(save, resourceManager, petitionManager, city);
     }
     else
     {
-        std::cout << "[Main] No save found, starting fresh game.\n";
+        // std::cout << "[Main] No save found, starting fresh game.\n";
+        LOG_INFO("main", "loadGame", "No saved game found, starting new game.");
         gameRepository.saveGame(gameId, resourceManager, petitionManager, city);
-        std::cout << "[Main] Saved initial game state with game_id=" << gameId << "\n";
+        // std::cout << "[Main] Saved initial game state with game_id=" << gameId << "\n";
+        LOG_INFO("main", "saveGame", "Saved initial game state to MongoDB with game_id=" + gameId);
     }
 
     // gameRepository.saveGame(gameId, resourceManager, petitionManager, city);

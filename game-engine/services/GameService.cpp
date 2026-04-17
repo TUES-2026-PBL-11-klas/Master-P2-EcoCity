@@ -1,4 +1,6 @@
 #include "GameService.hpp"
+#include "../Logger.hpp"
+#include "../Tracer.hpp"
 #include <iostream>
 
 namespace {
@@ -16,10 +18,28 @@ void printResourceSnapshot(const ResourceManager& resourceManager)
 GameService::GameService(ResourceManager* resourceManager, PetitionManager* petitionManager, City* city, SocketServer* socketServer,
     MongoGameRepository* gameRepository, const std::string& gameId)
 : resourceManager(resourceManager), petitionManager(petitionManager), city(city), socketServer(socketServer),
-gameRepository(gameRepository), gameId(gameId) {}
+gameRepository(gameRepository), gameId(gameId)
+{
+    auto now = std::chrono::system_clock::now();
+    auto ms  = std::chrono::duration_cast<std::chrono::milliseconds>(
+                now.time_since_epoch()).count();
+
+    std::string filename = "metrics/game_" + std::to_string(ms) + ".csv";
+
+    metricsFile_.open(filename, std::ios::app);
+    if (!metricsFile_.is_open()) {
+        throw std::runtime_error("Failed to open metrics file: " + filename);
+    }
+
+    if (metricsFile_.tellp() == 0) {
+        metricsFile_ << "tick,money,energy,water,co2,population\n";
+    }
+}
 
 bool GameService::tick()
 {
+    TRACE("GameService", "tick");
+
     readPlayerInput();
 
     const std::vector<CompletedConstruction> completedConstructions = petitionManager->tick();
@@ -37,6 +57,17 @@ bool GameService::tick()
 
     printResourceSnapshot(*resourceManager);
 
+    LOG_DEBUG("GameService", "tick_complete");
+
+    metricsFile_ << ++tickCount_
+    << "," << resourceManager->getResourceValue(MONEY)
+    << "," << resourceManager->getResourceValue(ENERGY)
+    << "," << resourceManager->getResourceValue(WATER)
+    << "," << resourceManager->getResourceValue(CO2)
+    << "," << resourceManager->getResourceValue(POPULATION)
+    << "\n";
+    metricsFile_.flush();
+
     return checkGameOver();
 }
 
@@ -45,11 +76,18 @@ bool GameService::checkGameOver()
     for(const Resource& resource : *resourceManager)
     {
         if (resource.getCurrentValue() <= 0 && resource.getType() != CO2) {
+            LOG_WARN("GameService", "game_over", "reason=resource_depleted");
             return true;    // Game over if any resource except CO2 is depleted
         }
     }
 
-    return resourceManager->getResourceValue(CO2) >= MAX_CO2; // Game over if CO2 reaches limit
+    if(resourceManager->getResourceValue(CO2) >= MAX_CO2) // Game over if CO2 reaches limit
+    {
+        LOG_WARN("GameService", "game_over", "reason=co2_limit_exceeded");
+        return true;
+    }
+
+    return false;   // Game continues otherwise
 }
 
 void GameService::readPlayerInput()
@@ -63,17 +101,20 @@ void GameService::readPlayerInput()
         if (response.responded()) {
             if (response.accepted()) {
                 petitionManager->acceptPetition();
-                std::cout << "[Input] Petition accepted.\n";
+                // std::cout << "[Input] Petition accepted.\n";
+                LOG_INFO("GameService", "petition_accepted");
             } else {
                 petitionManager->rejectPetition();
-                std::cout << "[Input] Petition rejected.\n";
+                // std::cout << "[Input] Petition rejected.\n";
+                LOG_INFO("GameService", "petition_rejected");
             }
         }
     }
 
     if (uiAction.save_game()) {
         gameRepository->saveGame(gameId, *resourceManager, *petitionManager, *city);
-        std::cout << "[Input] Game saved to MongoDB.\n";
+        // std::cout << "[Input] Game saved to MongoDB.\n";
+        LOG_INFO("GameService", "game_saved");
     }
 }
 
@@ -147,6 +188,7 @@ void GameService::handlePopulationScaling() {
                 resourceManager->setDeltaForResourceType(type, newDelta);
             }
         }
-        std::cout << "[Balance] Population reached milestone! New goal: " << nextPopulationGoal << "\n";
+        // std::cout << "[Balance] Population reached milestone! New goal: " << nextPopulationGoal << "\n";
+        LOG_DEBUG("GameService", "population_milestone_reached", "new_goal=" + std::to_string(nextPopulationGoal));
     }
 }
