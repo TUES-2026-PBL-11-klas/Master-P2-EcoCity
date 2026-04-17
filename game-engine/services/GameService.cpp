@@ -1,4 +1,7 @@
 #include "GameService.hpp"
+#include "../Logger.hpp"
+#include "../Tracer.hpp"
+#include <filesystem>
 #include <iostream>
 
 namespace {
@@ -16,10 +19,29 @@ void printResourceSnapshot(const ResourceManager& resourceManager)
 GameService::GameService(ResourceManager* resourceManager, PetitionManager* petitionManager, City* city, ISocketServer* socketServer,
     IGameRepository* gameRepository, const std::string& gameId)
 : resourceManager(resourceManager), petitionManager(petitionManager), city(city), socketServer(socketServer),
-gameRepository(gameRepository), gameId(gameId) {}
+gameRepository(gameRepository), gameId(gameId)
+{
+    auto now = std::chrono::system_clock::now();
+    auto ms  = std::chrono::duration_cast<std::chrono::milliseconds>(
+                now.time_since_epoch()).count();
+
+    std::filesystem::create_directories("metrics");
+    std::string filename = "metrics/game_" + std::to_string(ms) + ".csv";
+
+    metricsFile_.open(filename, std::ios::app);
+    if (!metricsFile_.is_open()) {
+        throw std::runtime_error("Failed to open metrics file: " + filename);
+    }
+
+    if (metricsFile_.tellp() == 0) {
+        metricsFile_ << "tick,money,energy,water,co2,population\n";
+    }
+}
 
 bool GameService::tick()
 {
+    TRACE("GameService", "tick");
+
     readPlayerInput();
 
     const std::vector<CompletedConstruction> completedConstructions = petitionManager->tick();
@@ -29,11 +51,22 @@ bool GameService::tick()
     }
 
     resourceManager->tick();
+    handlePopulationScaling();
 
-    // Send updated game state to UI after every tick
     socketServer->sendGameState(buildGameState());
 
     printResourceSnapshot(*resourceManager);
+
+    LOG_DEBUG("GameService", "tick_complete");
+
+    metricsFile_ << ++tickCount_
+    << "," << resourceManager->getResourceValue(MONEY)
+    << "," << resourceManager->getResourceValue(ENERGY)
+    << "," << resourceManager->getResourceValue(WATER)
+    << "," << resourceManager->getResourceValue(CO2)
+    << "," << resourceManager->getResourceValue(POPULATION)
+    << "\n";
+    metricsFile_.flush();
 
     return checkGameOver();
 }
@@ -43,16 +76,23 @@ bool GameService::checkGameOver()
     for(const Resource& resource : *resourceManager)
     {
         if (resource.getCurrentValue() <= 0 && resource.getType() != CO2) {
-            return true;    // Game over if any resource except CO2 is depleted
+            LOG_WARN("GameService", "game_over", "reason=resource_depleted");
+            return true;
         }
     }
 
-    return resourceManager->getResourceValue(CO2) >= MAX_CO2; // Game over if CO2 reaches limit
+    if(resourceManager->getResourceValue(CO2) >= MAX_CO2)
+    {
+        LOG_WARN("GameService", "game_over", "reason=co2_limit_exceeded");
+        return true;
+    }
+
+    return false;
 }
 
 void GameService::readPlayerInput()
 {
-    auto action = socketServer->pollAction();   // returns optional if empty returns immediately, else we extract the UIAction
+    auto action = socketServer->pollAction();
     if (!action.has_value()) return;
     const game_api::v1::UIAction& uiAction = action.value();
 
@@ -61,17 +101,17 @@ void GameService::readPlayerInput()
         if (response.responded()) {
             if (response.accepted()) {
                 petitionManager->acceptPetition();
-                std::cout << "[Input] Petition accepted.\n";
+                LOG_INFO("GameService", "petition_accepted");
             } else {
                 petitionManager->rejectPetition();
-                std::cout << "[Input] Petition rejected.\n";
+                LOG_INFO("GameService", "petition_rejected");
             }
         }
     }
 
     if (uiAction.save_game()) {
         gameRepository->saveGame(gameId, *resourceManager, *petitionManager, *city);
-        std::cout << "[Input] Game saved to MongoDB.\n";
+        LOG_INFO("GameService", "game_saved");
     }
 }
 
@@ -79,12 +119,10 @@ game_api::v1::GameState GameService::buildGameState() const
 {
     game_api::v1::GameState state;
 
-    // Building counts from City
     for (const auto& [type, count] : city->getBuildings()) {
         (*state.mutable_building_counts())[static_cast<int>(type)] = count;
     }
 
-    // Current petition
     const Petition* petition = petitionManager->getCurrentPetition();
     if (petition != nullptr && petition->getBuilding() != nullptr) {
         game_api::v1::Petition* protoPetition = state.mutable_current_petition();
@@ -105,5 +143,50 @@ game_api::v1::GameState GameService::buildGameState() const
         }
     }
 
+    for (const Resource& resource : *resourceManager) {
+        (*state.mutable_resources())[resource.getType()] =
+            static_cast<int32_t>(resource.getCurrentValue());
+    }
+
     return state;
+}
+
+void GameService::handlePopulationScaling() {
+    long long int currentPop = resourceManager->getResourceValue(POPULATION);
+
+    if (currentPop >= nextPopulationGoal) {
+        nextPopulationGoal = static_cast<long long int>(nextPopulationGoal * SCALING_FACTOR);
+
+        for (auto& resource : *resourceManager) {
+            ResourceType type = resource.getType();
+            long long int newDelta;
+            long long int currentDelta = resource.getDeltaValue();
+            if (type == WATER || type == ENERGY) {
+                if(currentDelta < 0){
+                    newDelta = static_cast<long long int>(currentDelta * demandIncrease);
+                }
+                else{
+                    newDelta = static_cast<long long int>(currentDelta * (2 - demandIncrease));
+                }
+                resourceManager->setDeltaForResourceType(type, newDelta);
+            }
+            else if (type == CO2) {
+                if(currentDelta > 0)
+                {
+                    newDelta = static_cast<long long int>(currentDelta * demandIncrease);
+                    resourceManager->setDeltaForResourceType(type, newDelta);
+                }
+                else {
+                    newDelta = currentDelta - static_cast<long long int>(currentDelta * (2 - demandIncrease));
+                    resourceManager->setDeltaForResourceType(type, newDelta);
+                }
+            }
+            else if(type == MONEY)
+            {
+                newDelta = static_cast<long long int>(currentDelta * demandIncrease);
+                resourceManager->setDeltaForResourceType(type, newDelta);
+            }
+        }
+        LOG_DEBUG("GameService", "population_milestone_reached", "new_goal=" + std::to_string(nextPopulationGoal));
+    }
 }

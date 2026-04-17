@@ -164,12 +164,12 @@ TEST(PetitionManagerTest, RejectDoesNotAddToUnderConstruction) {
 
 TEST(PetitionManagerTest, RejectGeneratesNewCurrentPetition) {
     PetitionManager petitionManager;
-    Petition* first = petitionManager.getCurrentPetition();
+    const int firstId = petitionManager.getCurrentPetition()->getId();
 
     petitionManager.rejectPetition();
 
     EXPECT_NE(petitionManager.getCurrentPetition(), nullptr);
-    EXPECT_NE(petitionManager.getCurrentPetition(), first);
+    EXPECT_EQ(petitionManager.getCurrentPetition()->getId(), firstId + 1);
 }
 
 TEST(PetitionManagerTest, RejectIncrementsPetitionId) {

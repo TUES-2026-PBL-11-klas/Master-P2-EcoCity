@@ -5,7 +5,7 @@ TEST_NAMES := ResourceManagerTest PetitionManagerTest GameServiceTest
 TEST_MAIN := tests/test_main.cpp
 TEST_BUILDING_SRCS := $(filter-out domain/buildings/BuildingFactory.cpp,$(wildcard domain/buildings/*.cpp))
 
-PROTOC := C:/vcpkg/installed/x64-mingw-dynamic/tools/protobuf/protoc.exe
+PROTOC := C:/msys64/ucrt64/bin/protoc.exe
 
 PROTO_SRC_DIR := ../game_api/v1
 PROTO_FILE := $(PROTO_SRC_DIR)/api_types.proto

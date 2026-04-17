@@ -41,5 +41,8 @@
 *.dwo
 
 UI/target/*
+game-engine/logs/*
+game-engine/metrics/*
 
 .vscode/*
+.venv/*

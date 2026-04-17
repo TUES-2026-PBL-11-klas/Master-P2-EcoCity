@@ -1,14 +1,16 @@
 #include "ResourceManager.hpp"
 
+#include <iostream>
+
 // Enum order:  WATER=0, ENERGY=1, MONEY=2, POPULATION=3, CO2=4
 // Array must follow the same order:
 ResourceManager::ResourceManager()
     : resources{
-        Resource(ResourceType::WATER, 1'000'000LL, 0),          // index 0
-        Resource(ResourceType::ENERGY, 5'000'000LL, 0),         // index 1
-        Resource(ResourceType::MONEY, 250'000LL, 0),            // index 2
-        Resource(ResourceType::POPULATION, 1'000'000LL, 0),     // index 3
-        Resource(ResourceType::CO2, 1'000'000LL, 0)             // index 4
+        Resource(ResourceType::WATER, 1'000'000LL, -10000),          // index 0
+        Resource(ResourceType::ENERGY, 5'000'000LL, -10000),         // index 1
+        Resource(ResourceType::MONEY, 250'000LL, +10000),            // index 2
+        Resource(ResourceType::POPULATION, 1'000'000LL, +10000),     // index 3
+        Resource(ResourceType::CO2, 1'000'000LL, +10000)             // index 4
     }
     {
         // Static assertions to ensure enum values match array indices

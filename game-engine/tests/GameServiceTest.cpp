@@ -161,15 +161,17 @@ TEST_F(GameServiceTest, CompletedConstructionAddsBuildingToCity) {
 
 TEST_F(GameServiceTest, CompletedConstructionAppliesEffectsAsDeltas) {
     const LLint waterBefore = resourceManager.getResourceValue(WATER);
+    const LLint deltaBefore = resourceManager.getDeltaForResourceType(WATER);
     petitionManager.restoreUnderConstruction(makePetition(55, WATER_TREATMENT_PLANT, 1, {{WATER, 200}}));
 
     gameService.tick();
 
-    EXPECT_EQ(resourceManager.getResourceValue(WATER), waterBefore + 200);
+    EXPECT_EQ(resourceManager.getResourceValue(WATER), waterBefore + deltaBefore + 200);
 }
 
 TEST_F(GameServiceTest, MultipleCompletionsInOneTick) {
     const LLint energyBefore = resourceManager.getResourceValue(ENERGY);
+    const LLint deltaBefore = resourceManager.getDeltaForResourceType(ENERGY);
     petitionManager.restoreUnderConstruction(makePetition(10, SOLAR_PANEL_FARM, 1, {{ENERGY, 100}}));
     petitionManager.restoreUnderConstruction(makePetition(11, WIND_TURBINE_FARM, 1, {{ENERGY, 150}}));
 
@@ -177,7 +179,7 @@ TEST_F(GameServiceTest, MultipleCompletionsInOneTick) {
 
     EXPECT_EQ(city.getBuildingCount(SOLAR_PANEL_FARM), 1);
     EXPECT_EQ(city.getBuildingCount(WIND_TURBINE_FARM), 1);
-    EXPECT_EQ(resourceManager.getResourceValue(ENERGY), energyBefore + 250);
+    EXPECT_EQ(resourceManager.getResourceValue(ENERGY), energyBefore + deltaBefore + 250);
 }
 
 TEST_F(GameServiceTest, NoCompletionsLeaveCityUnchanged) {
@@ -191,10 +193,11 @@ TEST_F(GameServiceTest, NoCompletionsLeaveCityUnchanged) {
 TEST_F(GameServiceTest, ResourceManagerTickedEachGameTick) {
     resourceManager.applyEffect({{MONEY, 1000}});
     const LLint before = resourceManager.getResourceValue(MONEY);
+    const LLint delta = resourceManager.getDeltaForResourceType(MONEY);
 
     gameService.tick();
 
-    EXPECT_EQ(resourceManager.getResourceValue(MONEY), before + 1000);
+    EXPECT_EQ(resourceManager.getResourceValue(MONEY), before + delta);
 }
 
 TEST_F(GameServiceTest, NoGameOverWithHealthyResources) {
@@ -214,6 +217,7 @@ TEST_F(GameServiceTest, GameOverWhenCO2ExceedsMax) {
 }
 
 TEST_F(GameServiceTest, NoGameOverWhenCO2JustBelowMax) {
+    resourceManager.setDeltaForResourceType(CO2, 0);
     resourceManager.changeResourceValue(CO2, (MAX_CO2 - 1) - resourceManager.getResourceValue(CO2));
 
     EXPECT_FALSE(gameService.tick());
@@ -238,18 +242,25 @@ TEST_F(GameServiceTest, GameOverWhenEnergyDepleted) {
 }
 
 TEST_F(GameServiceTest, GameOverWhenMoneyDepleted) {
+    resourceManager.setDeltaForResourceType(MONEY, 0);
     resourceManager.changeResourceValue(MONEY, -resourceManager.getResourceValue(MONEY));
 
     EXPECT_TRUE(gameService.tick());
 }
 
 TEST_F(GameServiceTest, GameOverWhenPopulationDepleted) {
+    resourceManager.setDeltaForResourceType(POPULATION, 0);
     resourceManager.changeResourceValue(POPULATION, -resourceManager.getResourceValue(POPULATION));
 
     EXPECT_TRUE(gameService.tick());
 }
 
 TEST_F(GameServiceTest, NoGameOverWhenResourcesAtOne) {
+    resourceManager.setDeltaForResourceType(WATER, 0);
+    resourceManager.setDeltaForResourceType(ENERGY, 0);
+    resourceManager.setDeltaForResourceType(MONEY, 0);
+    resourceManager.setDeltaForResourceType(POPULATION, 0);
+    resourceManager.setDeltaForResourceType(CO2, 0);
     resourceManager.changeResourceValue(WATER, 1 - resourceManager.getResourceValue(WATER));
     resourceManager.changeResourceValue(ENERGY, 1 - resourceManager.getResourceValue(ENERGY));
     resourceManager.changeResourceValue(MONEY, 1 - resourceManager.getResourceValue(MONEY));
@@ -261,7 +272,7 @@ TEST_F(GameServiceTest, NoGameOverWhenResourcesAtOne) {
 
 TEST_F(GameServiceTest, GameOverWhenResourceTicksDownToZero) {
     resourceManager.changeResourceValue(MONEY, 10 - resourceManager.getResourceValue(MONEY));
-    resourceManager.applyEffect({{MONEY, -10}});
+    resourceManager.setDeltaForResourceType(MONEY, -10);
 
     EXPECT_TRUE(gameService.tick());
 }

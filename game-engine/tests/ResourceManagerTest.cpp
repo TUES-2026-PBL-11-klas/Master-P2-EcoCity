@@ -63,6 +63,11 @@ TEST(ResourceManagerTest, DefaultInitialValues) {
     EXPECT_EQ(resourceManager.getResourceValue(MONEY), 250'000LL);
     EXPECT_EQ(resourceManager.getResourceValue(POPULATION), 1'000'000LL);
     EXPECT_EQ(resourceManager.getResourceValue(CO2), 1'000'000LL);
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(WATER), -10'000LL);
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(ENERGY), -10'000LL);
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(MONEY), 10'000LL);
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(POPULATION), 10'000LL);
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(CO2), 10'000LL);
 }
 
 TEST(ResourceManagerTest, GetResourcesReturnsAllFive) {
@@ -74,6 +79,7 @@ TEST(ResourceManagerTest, GetResourcesReturnsAllFive) {
 TEST(ResourceManagerTest, TickWithZeroDeltaChangesNothing) {
     ResourceManager resourceManager;
     const LLint before = resourceManager.getResourceValue(WATER);
+    resourceManager.setDeltaForResourceType(WATER, 0);
 
     resourceManager.tick();
 
@@ -83,6 +89,7 @@ TEST(ResourceManagerTest, TickWithZeroDeltaChangesNothing) {
 TEST(ResourceManagerTest, TickAppliesDelta) {
     ResourceManager resourceManager;
     const LLint before = resourceManager.getResourceValue(WATER);
+    resourceManager.setDeltaForResourceType(WATER, 0);
 
     resourceManager.applyEffect({{WATER, 500}});
     resourceManager.tick();
@@ -93,6 +100,7 @@ TEST(ResourceManagerTest, TickAppliesDelta) {
 TEST(ResourceManagerTest, MultipleTicksAccumulateDelta) {
     ResourceManager resourceManager;
     const LLint before = resourceManager.getResourceValue(MONEY);
+    resourceManager.setDeltaForResourceType(MONEY, 0);
 
     resourceManager.applyEffect({{MONEY, 1000}});
     resourceManager.tick();
@@ -104,14 +112,18 @@ TEST(ResourceManagerTest, MultipleTicksAccumulateDelta) {
 
 TEST(ResourceManagerTest, ApplyEffectChangesDelta) {
     ResourceManager resourceManager;
+    const LLint before = resourceManager.getDeltaForResourceType(ENERGY);
 
     resourceManager.applyEffect({{ENERGY, 200}});
 
-    EXPECT_EQ(resourceManager.getDeltaForResourceType(ENERGY), 200);
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(ENERGY), before + 200);
 }
 
 TEST(ResourceManagerTest, ApplyMultipleEffects) {
     ResourceManager resourceManager;
+    const LLint waterBefore = resourceManager.getDeltaForResourceType(WATER);
+    const LLint energyBefore = resourceManager.getDeltaForResourceType(ENERGY);
+    const LLint co2Before = resourceManager.getDeltaForResourceType(CO2);
     const std::vector<ResourceEffect> effects = {
         {WATER, 100},
         {ENERGY, -50},
@@ -120,14 +132,15 @@ TEST(ResourceManagerTest, ApplyMultipleEffects) {
 
     resourceManager.applyEffect(effects);
 
-    EXPECT_EQ(resourceManager.getDeltaForResourceType(WATER), 100);
-    EXPECT_EQ(resourceManager.getDeltaForResourceType(ENERGY), -50);
-    EXPECT_EQ(resourceManager.getDeltaForResourceType(CO2), 300);
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(WATER), waterBefore + 100);
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(ENERGY), energyBefore - 50);
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(CO2), co2Before + 300);
 }
 
 TEST(ResourceManagerTest, ApplyEffectSkipsUnspecified) {
     ResourceManager resourceManager;
     const LLint before = resourceManager.getResourceValue(WATER);
+    resourceManager.setDeltaForResourceType(WATER, 0);
 
     resourceManager.applyEffect({{RESOURCE_UNSPECIFIED, 9999}});
     resourceManager.tick();
@@ -137,11 +150,12 @@ TEST(ResourceManagerTest, ApplyEffectSkipsUnspecified) {
 
 TEST(ResourceManagerTest, ApplyEffectAccumulates) {
     ResourceManager resourceManager;
+    const LLint before = resourceManager.getDeltaForResourceType(MONEY);
 
     resourceManager.applyEffect({{MONEY, 100}});
     resourceManager.applyEffect({{MONEY, 200}});
 
-    EXPECT_EQ(resourceManager.getDeltaForResourceType(MONEY), 300);
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(MONEY), before + 300);
 }
 
 TEST(ResourceManagerTest, CanAffordWhenSufficientFunds) {

@@ -15,7 +15,6 @@
 struct SavedGame {
     bool found = false;
 
-    // Resources: one entry per type
     struct ResourceData {
         ResourceType type = RESOURCE_UNSPECIFIED;
         long long amount = 0;
@@ -23,21 +22,16 @@ struct SavedGame {
     };
     std::vector<ResourceData> resources;
 
-    // Current petition shown to the player
     struct PetitionData {
         int id = 0;
         BuildingType buildingType = BUILDING_UNSPECIFIED;
         long long cost = 0;
-        int ticksRemaining = 0;   // ticks_needed_for_construction as saved
+        int ticksRemaining = 0;
     };
 
     bool hasCurrentPetition = false;
     PetitionData currentPetition;
-
-    // Petitions currently under construction
     std::vector<PetitionData> underConstructionPetitions;
-
-    // How many of each building type have been completed
     std::unordered_map<BuildingType, int> buildingCounts;
 };
 
@@ -57,7 +51,6 @@ class MongoGameRepository : public IGameRepository {
             const City& city
         ) override;
 
-        // Returns a SavedGame. Check .found to know if any save existed.
         SavedGame loadGame(const std::string& gameId);
 };
 

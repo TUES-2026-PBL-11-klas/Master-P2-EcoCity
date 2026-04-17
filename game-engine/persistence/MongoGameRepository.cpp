@@ -21,6 +21,9 @@
 #include "../domain/ResourceEffect.hpp"
 #include "../domain/ResourceType.hpp"
 
+#include "../Logger.hpp"
+#include "../Tracer.hpp"
+
 using bsoncxx::builder::basic::document;
 using bsoncxx::builder::basic::kvp;
 
@@ -172,6 +175,8 @@ void MongoGameRepository::saveGame(
     const PetitionManager& petitionManager,
     const City& city)
 {
+    TRACE("MongoGameRepository", "saveGame");
+
     mongocxx::database database = client[databaseName];
 
     mongocxx::options::replace replaceOptions;
@@ -223,6 +228,76 @@ void MongoGameRepository::saveGame(
             buildPetitionDocument(gameId, *petitionManager.getCurrentPetition()).extract()
         );
     }
+
+    LOG_INFO("MongoGameRepository", "game_saved", "game_id=" + gameId);
+}
+
+SavedGame MongoGameRepository::loadGame(const std::string& gameId)
+{
+    TRACE("MongoGameRepository", "loadGame");
+
+    SavedGame result{};
+    result.found = false;
+
+    mongocxx::database db = client[databaseName];
+
+    // check the game exists
+    auto gameDoc = db["games"].find_one(buildGameIdFilter(gameId).extract());
+    if (!gameDoc) {
+        std::cerr << "[Load] No save found for game_id=" << gameId << "\n";
+        return result;
+    }
+    result.found = true;
+
+    // resources
+    {
+        auto cursor = db["resources"].find(buildGameIdFilter(gameId).extract());
+        for (const auto& doc : cursor) {
+            SavedGame::ResourceData rd;
+            rd.type          = resourceTypeFromString(getString(doc, "type"));
+            rd.amount        = getNumber(doc, "amount");
+            rd.changesPerTick = getNumber(doc, "changes_per_tick");
+            result.resources.push_back(rd);
+        }
+    }
+
+    // current_petition
+    {
+        auto doc = db["current_petition"].find_one(buildGameIdFilter(gameId).extract());
+        if (doc) {
+            result.hasCurrentPetition = true;
+            result.currentPetition    = readPetitionDoc(doc->view());
+        }
+    }
+
+    // active_petitions (under construction)
+    {
+        auto cursor = db["active_petitions"].find(buildGameIdFilter(gameId).extract());
+        for (const auto& doc : cursor) {
+            result.underConstructionPetitions.push_back(readPetitionDoc(doc));
+        }
+    }
+
+    // petition_counts (building tallies)
+    {
+        auto cursor = db["petition_counts"].find(buildGameIdFilter(gameId).extract());
+        for (const auto& doc : cursor) {
+            BuildingType bt = buildingTypeFromString(getString(doc, "type"));
+            int count       = static_cast<int>(getNumber(doc, "count"));
+            result.buildingCounts[bt] = count;
+        }
+    }
+
+    std::cout << "[Load] Game loaded: "
+              << result.resources.size()           << " resources, "
+              << result.buildingCounts.size()       << " building types, "
+              << result.underConstructionPetitions.size() << " buildings under construction, "
+              << "current petition: " << (result.hasCurrentPetition ? "yes" : "none")
+              << "\n";
+
+    LOG_INFO("MongoGameRepository", "game_loaded", "game_id=" + gameId);
+
+    return result;
 }
 
 SavedGame MongoGameRepository::loadGame(const std::string& gameId)

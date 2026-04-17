@@ -1,4 +1,6 @@
 #include "PetitionManager.hpp"
+#include "../Logger.hpp"
+#include "../Tracer.hpp"
 
 PetitionManager::PetitionManager()
 : currentPetition(nullptr), randomEngine(std::random_device{}()), nextPetitionId(1)
@@ -9,6 +11,8 @@ PetitionManager::PetitionManager()
 // Returns effects of the completed petitions
 std::vector<CompletedConstruction> PetitionManager::tick()
 {
+    TRACE("PetitionManager", "tick");
+
     std::vector<Petition*> petitionsToRemove;
     std::vector<CompletedConstruction> completedConstructions;
     for (auto& petition : underConstructionPetitions) {
@@ -17,6 +21,9 @@ std::vector<CompletedConstruction> PetitionManager::tick()
         if(!effects.empty()) {
             completedConstructions.push_back({ petition->getBuilding()->getType(), std::move(effects) });
             petitionsToRemove.push_back(petition);
+
+            LOG_INFO("PetitionManager", "petition_completed",
+                "id=" + std::to_string(petition->getId()));
         }
     }
 
@@ -79,6 +86,8 @@ Petition* PetitionManager::generatePetition()
 
     std::uniform_int_distribution<std::size_t> distribution(0, buildingPool.size() - 1);
     const BuildingType buildingType = buildingPool[distribution(randomEngine)];
+
+    LOG_DEBUG("PetitionManager", "petition_generated", "id=" + std::to_string(nextPetitionId));
 
     return new Petition(nextPetitionId++, createBuilding(buildingType));
 }
