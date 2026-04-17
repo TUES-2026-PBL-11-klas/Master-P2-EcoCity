@@ -8,8 +8,9 @@
 #include <optional>
 
 #include "../api_types.pb.h"
+#include "ISocketServer.hpp"
 
-class SocketServer {
+class SocketServer : public ISocketServer {
     private:
         int port;
         std::atomic<bool> running;      // Flag both threads can check, atomic is used because plain bool is not thread-safe
@@ -28,16 +29,16 @@ class SocketServer {
 
     public:
         explicit SocketServer(int port);
-        ~SocketServer();
+        ~SocketServer() override;
 
         // Called from socket thread - stores coming UIActions
         // Called from game thread - reads and clears the latest action
-        std::optional<game_api::v1::UIAction> pollAction();
+        std::optional<game_api::v1::UIAction> pollAction() override;
 
         // Called from game thread: sends GameState to UI
-        void sendGameState(const game_api::v1::GameState& state);
+        void sendGameState(const game_api::v1::GameState& state) override;
 
-        void stop();    // closes socket and stops the listener thread
+        void stop() override;    // closes socket and stops the listener thread
 };
 
 #endif

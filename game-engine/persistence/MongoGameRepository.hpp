@@ -8,6 +8,7 @@
 #include <mongocxx/v_noabi/mongocxx/uri.hpp>
 
 #include "../domain/City.hpp"
+#include "IGameRepository.hpp"
 #include "../services/PetitionManager.hpp"
 #include "../services/ResourceManager.hpp"
 
@@ -40,7 +41,7 @@ struct SavedGame {
     std::unordered_map<BuildingType, int> buildingCounts;
 };
 
-class MongoGameRepository {
+class MongoGameRepository : public IGameRepository {
     private:
         mongocxx::instance instance;
         mongocxx::client client;
@@ -54,7 +55,7 @@ class MongoGameRepository {
             const ResourceManager& resourceManager,
             const PetitionManager& petitionManager,
             const City& city
-        );
+        ) override;
 
         // Returns a SavedGame. Check .found to know if any save existed.
         SavedGame loadGame(const std::string& gameId);

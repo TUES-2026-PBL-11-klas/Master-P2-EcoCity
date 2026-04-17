@@ -13,8 +13,8 @@ void printResourceSnapshot(const ResourceManager& resourceManager)
 }
 }
 
-GameService::GameService(ResourceManager* resourceManager, PetitionManager* petitionManager, City* city, SocketServer* socketServer,
-    MongoGameRepository* gameRepository, const std::string& gameId)
+GameService::GameService(ResourceManager* resourceManager, PetitionManager* petitionManager, City* city, ISocketServer* socketServer,
+    IGameRepository* gameRepository, const std::string& gameId)
 : resourceManager(resourceManager), petitionManager(petitionManager), city(city), socketServer(socketServer),
 gameRepository(gameRepository), gameId(gameId) {}
 

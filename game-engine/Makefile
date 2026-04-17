@@ -2,6 +2,8 @@ CXX := g++
 CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic
 TARGET := eco_city_engine
 TEST_NAMES := ResourceManagerTest PetitionManagerTest GameServiceTest
+TEST_MAIN := tests/test_main.cpp
+TEST_BUILDING_SRCS := $(filter-out domain/buildings/BuildingFactory.cpp,$(wildcard domain/buildings/*.cpp))
 
 PROTOC := C:/vcpkg/installed/x64-mingw-dynamic/tools/protobuf/protoc.exe
 
@@ -70,10 +72,15 @@ ifeq ($(OS),Windows_NT)
     LIBS := libprotobuf.lib abseil_dll.lib mongocxx-v_noabi-rhi-md.lib bsoncxx-v_noabi-rhi-md.lib
 
     TEST_CXX ?= C:/msys64/ucrt64/bin/g++.exe
+    PKG_CONFIG ?= C:/msys64/ucrt64/bin/pkg-config.exe
     GTEST_ROOT ?= C:/msys64/ucrt64
     TEST_CXXFLAGS ?= -std=c++17 -Wall -Wextra -Wpedantic -I$(GTEST_ROOT)/include
     TEST_LDFLAGS ?= -L$(GTEST_ROOT)/lib
-    TEST_LDLIBS ?= -lgtest -lgtest_main
+    TEST_LDLIBS ?= -lgtest
+    PROTOBUF_ROOT ?= C:/msys64/ucrt64
+    PROTOBUF_CXXFLAGS ?= $(shell $(PKG_CONFIG) --cflags protobuf)
+    PROTOBUF_LDFLAGS ?=
+    PROTOBUF_LDLIBS ?= $(shell $(PKG_CONFIG) --libs protobuf)
 else
     DEL := rm -f
     FIXPATH = $1
@@ -88,7 +95,10 @@ else
     GTEST_ROOT ?=
     TEST_CXXFLAGS ?= -std=c++17 -Wall -Wextra -Wpedantic `pkg-config --cflags gtest`
     TEST_LDFLAGS ?=
-    TEST_LDLIBS ?= `pkg-config --libs gtest` -lgtest_main
+    TEST_LDLIBS ?= `pkg-config --libs gtest`
+    PROTOBUF_CXXFLAGS ?= `pkg-config --cflags protobuf`
+    PROTOBUF_LDFLAGS ?=
+    PROTOBUF_LDLIBS ?= `pkg-config --libs protobuf`
 endif
 
 all: $(TARGET)
@@ -138,8 +148,14 @@ else
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 endif
 
-tests/%$(TEST_EXE_EXT): tests/%.cpp
-	$(TEST_CXX) $(TEST_CXXFLAGS) $< -o $@ $(TEST_LDFLAGS) $(TEST_LDLIBS)
+tests/ResourceManagerTest$(TEST_EXE_EXT): tests/ResourceManagerTest.cpp $(TEST_MAIN) domain/Resource.cpp services/ResourceManager.cpp
+	$(TEST_CXX) $(TEST_CXXFLAGS) $(TEST_MAIN) tests/ResourceManagerTest.cpp domain/Resource.cpp services/ResourceManager.cpp -o $@ $(TEST_LDFLAGS) $(TEST_LDLIBS)
+
+tests/PetitionManagerTest$(TEST_EXE_EXT): tests/PetitionManagerTest.cpp $(TEST_MAIN) domain/Building.cpp domain/Petition.cpp services/PetitionManager.cpp domain/buildings/BuildingFactory.cpp $(TEST_BUILDING_SRCS)
+	$(TEST_CXX) $(TEST_CXXFLAGS) $(TEST_MAIN) tests/PetitionManagerTest.cpp domain/Building.cpp domain/Petition.cpp services/PetitionManager.cpp domain/buildings/BuildingFactory.cpp $(TEST_BUILDING_SRCS) -o $@ $(TEST_LDFLAGS) $(TEST_LDLIBS)
+
+tests/GameServiceTest$(TEST_EXE_EXT): tests/GameServiceTest.cpp $(TEST_MAIN) api_types.pb.cc domain/Building.cpp domain/City.cpp domain/Petition.cpp domain/Resource.cpp services/ResourceManager.cpp services/PetitionManager.cpp services/GameService.cpp domain/buildings/BuildingFactory.cpp $(TEST_BUILDING_SRCS)
+	$(TEST_CXX) $(TEST_CXXFLAGS) $(PROTOBUF_CXXFLAGS) $(TEST_MAIN) tests/GameServiceTest.cpp api_types.pb.cc domain/Building.cpp domain/City.cpp domain/Petition.cpp domain/Resource.cpp services/ResourceManager.cpp services/PetitionManager.cpp services/GameService.cpp domain/buildings/BuildingFactory.cpp $(TEST_BUILDING_SRCS) -o $@ $(TEST_LDFLAGS) $(PROTOBUF_LDFLAGS) $(TEST_LDLIBS) $(PROTOBUF_LDLIBS)
 
 run-tests: $(TEST_EXES)
 	$(foreach test_exe,$(TEST_EXES),$(test_exe) &&) exit 0

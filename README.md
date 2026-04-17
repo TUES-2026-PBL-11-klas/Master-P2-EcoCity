@@ -32,3 +32,18 @@ If you use MSYS2/UCRT64, the expected package is:
 ```powershell
 pacman -S mingw-w64-ucrt-x86_64-gtest
 ```
+
+### Extra dependency for `GameServiceTest`
+`GameServiceTest` now uses the real `GameService`, which depends on generated protobuf types from `api_types.pb.*`.
+
+The default `Makefile` expects protobuf headers and libraries under:
+
+- `PROTOBUF_ROOT=C:/vcpkg/installed/x64-mingw-dynamic`
+
+If your protobuf installation is elsewhere, override it explicitly:
+
+```powershell
+mingw32-make test-game-service PROTOBUF_ROOT=C:/path/to/protobuf
+```
+
+If you use MSYS2/UCRT64 for protobuf too, install the development package and point `PROTOBUF_ROOT` to that toolchain root.

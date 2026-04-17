@@ -1,532 +1,277 @@
-// =============================================================================
-// PetitionManagerTest.cpp
-// Google Test suite for Petition and PetitionManager.
-//
-// Because Building.hpp and the concrete building subclasses were not provided,
-// this file supplies:
-//   - The minimal interfaces inferred from usage in the production code.
-//   - MockBuilding  – a controllable stub for deterministic testing.
-//   - MockFactory   – replaces createBuilding() so PetitionManager can be
-//                     seeded with known buildings in tests.
-//
-// No changes to production logic are required; the only seam used is the
-// public generatePetition() method (already exposed in the header).
-// =============================================================================
-
 #include <gtest/gtest.h>
+
+#include "../domain/Petition.hpp"
+#include "../domain/buildings/BuildingFactory.hpp"
+#include "../services/PetitionManager.hpp"
+
 #include <algorithm>
 #include <array>
-#include <random>
 #include <stdexcept>
-#include <string>
 #include <utility>
 #include <vector>
 
-// ============================================================
-//  Shared types (ResourceType / ResourceEffect)
-// ============================================================
+namespace {
 
-enum ResourceType {
-    RESOURCE_UNSPECIFIED,
-    WATER, ENERGY, MONEY, POPULATION, CO2
-};
-
-typedef long long int LLint;
-
-struct ResourceEffect {
-    ResourceType type;
-    LLint        deltaValue;
-};
-
-// ============================================================
-//  BuildingType enum (must match production values)
-// ============================================================
-
-enum BuildingType {
-    BUILDING_UNSPECIFIED,
-    POWER_PLANT,
-    WATER_TREATMENT_PLANT,
-    SOLAR_PANEL_FARM,
-    SOLAR_PANEL_ROOFTOPS,
-    PUBLIC_TRANSPORT_UPGRADE,
-    WIND_TURBINE_FARM,
-    HYDROELECTRIC_PLANT,
-    URBAN_GREENING,
-    WATER_SAVING_INFRASTRUCTURE,
-    INDUSTRIAL_ZONE,
-    AIRPORT_EXPANSION,
-    ROAD_IMPROVEMENT
-};
-
-// ============================================================
-//  Building base class (minimal interface inferred from usage)
-// ============================================================
-
-class Building {
-public:
-    virtual ~Building() = default;
-
-    // Called every game tick while under construction.
-    // Returns empty vector while still building;
-    // returns the permanent resource effects when construction finishes.
-    virtual std::vector<ResourceEffect> buildTick() = 0;
-
-    virtual BuildingType getType() const = 0;
-};
-
-// ============================================================
-//  MockBuilding – controllable stub
-//
-//  ticksNeeded : how many calls to buildTick() before it
-//                returns effects (simulates construction time).
-//  effects     : what gets returned on completion.
-// ============================================================
-
-class MockBuilding : public Building {
-public:
-    BuildingType              type;
-    int                       ticksNeeded;
-    std::vector<ResourceEffect> completionEffects;
-    int                       tickCount = 0;
-    bool                      destroyed = false;
-
-    MockBuilding(BuildingType t,
-                 int ticks,
-                 std::vector<ResourceEffect> fx)
-        : type(t), ticksNeeded(ticks), completionEffects(std::move(fx)) {}
-
-    ~MockBuilding() override { destroyed = true; }
-
-    std::vector<ResourceEffect> buildTick() override {
-        ++tickCount;
-        if (tickCount >= ticksNeeded) {
-            return completionEffects;
+class StubBuilding : public Building {
+    public:
+        StubBuilding(BuildingType type, int ticksToComplete, std::vector<ResourceEffect> configuredEffects, LLint buildCost = 0)
+            : Building(type, buildCost, ticksToComplete), configuredEffects(std::move(configuredEffects))
+        {
+            effects = this->configuredEffects;
         }
-        return {};
-    }
 
-    BuildingType getType() const override { return type; }
+    private:
+        std::vector<ResourceEffect> configuredEffects;
+
+        std::vector<ResourceEffect> Effects() const override
+        {
+            return configuredEffects;
+        }
 };
 
-// ============================================================
-//  Production Petition class (verbatim from Petition.hpp/.cpp)
-// ============================================================
+class TrackingBuilding : public Building {
+    public:
+        explicit TrackingBuilding(bool& deletedFlag)
+            : Building(POWER_PLANT, 0, 1), deletedFlag(deletedFlag)
+        {
+            effects = Effects();
+        }
 
-class Petition {
-    int       id;
-    Building* building;
-public:
-    Petition(int id, Building* b) : id(id), building(b) {}
+        ~TrackingBuilding() override
+        {
+            deletedFlag = true;
+        }
 
-    int getId() const { return id; }
+    private:
+        bool& deletedFlag;
 
-    Building* getBuilding() const { return building; }
-
-    const std::vector<ResourceEffect> buildTick() {
-        return building->buildTick();
-    }
-
-    ~Petition() { delete building; }
-
-    Petition(const Petition&)            = delete;
-    Petition& operator=(const Petition&) = delete;
+        std::vector<ResourceEffect> Effects() const override
+        {
+            return {};
+        }
 };
 
-// ============================================================
-//  Minimal createBuilding() stub – returns a 1-tick building
-//  so PetitionManager::generatePetition() works in tests that
-//  don't care about a specific building type.
-// ============================================================
-
-Building* createBuilding(BuildingType type) {
-    if (type == BUILDING_UNSPECIFIED)
-        throw std::invalid_argument("Unsupported building type");
-    return new MockBuilding(type, 1, {{MONEY, 0}});
+Petition* makePetition(int id, BuildingType type, int ticksToComplete, std::vector<ResourceEffect> effects)
+{
+    return new Petition(id, new StubBuilding(type, ticksToComplete, std::move(effects)));
 }
 
-// ============================================================
-//  CompletedConstruction (from PetitionManager.hpp)
-// ============================================================
-
-struct CompletedConstruction {
-    BuildingType              type;
-    std::vector<ResourceEffect> effects;
-};
-
-// ============================================================
-//  Production PetitionManager (verbatim from .hpp/.cpp)
-// ============================================================
-
-class PetitionManager {
-    Petition*              currentPetition;
-    std::vector<Petition*> underConstructionPetitions;
-    std::mt19937           randomEngine;
-    int                    nextPetitionId;
-
-    static constexpr std::array<BuildingType, 12> buildingPool = {
-        POWER_PLANT, WATER_TREATMENT_PLANT, SOLAR_PANEL_FARM,
-        SOLAR_PANEL_ROOFTOPS, PUBLIC_TRANSPORT_UPGRADE, WIND_TURBINE_FARM,
-        HYDROELECTRIC_PLANT, URBAN_GREENING, WATER_SAVING_INFRASTRUCTURE,
-        INDUSTRIAL_ZONE, AIRPORT_EXPANSION, ROAD_IMPROVEMENT
-    };
-
-public:
-    PetitionManager()
-        : currentPetition(nullptr),
-          randomEngine(std::random_device{}()),
-          nextPetitionId(1)
-    {
-        currentPetition = generatePetition();
-    }
-
-    std::vector<CompletedConstruction> tick() {
-        std::vector<Petition*> toRemove;
-        std::vector<CompletedConstruction> completed;
-
-        for (auto& p : underConstructionPetitions) {
-            auto effects = p->buildTick();
-            if (!effects.empty()) {
-                completed.push_back({ p->getBuilding()->getType(), std::move(effects) });
-                toRemove.push_back(p);
-            }
-        }
-
-        for (auto& p : toRemove) {
-            underConstructionPetitions.erase(
-                std::remove(underConstructionPetitions.begin(),
-                            underConstructionPetitions.end(), p),
-                underConstructionPetitions.end());
-            delete p;
-        }
-
-        return completed;
-    }
-
-    void acceptPetition() {
-        if (currentPetition) {
-            underConstructionPetitions.push_back(currentPetition);
-            currentPetition = generatePetition();
-        }
-    }
-
-    void rejectPetition() {
-        if (currentPetition) {
-            delete currentPetition;
-            currentPetition = generatePetition();
-        }
-    }
-
-    Petition* generatePetition() {
-        std::uniform_int_distribution<std::size_t> dist(0, buildingPool.size() - 1);
-        BuildingType bt = buildingPool[dist(randomEngine)];
-        return new Petition(nextPetitionId++, createBuilding(bt));
-    }
-
-    Petition* getCurrentPetition() const { return currentPetition; }
-
-    const std::vector<Petition*>& getUnderConstructionPetitions() const {
-        return underConstructionPetitions;
-    }
-
-    ~PetitionManager() {
-        delete currentPetition;
-        for (Petition* p : underConstructionPetitions) delete p;
-    }
-
-    PetitionManager(const PetitionManager&)            = delete;
-    PetitionManager& operator=(const PetitionManager&) = delete;
-};
-
-// Needed for constexpr static member definition (C++14 ODR)
-constexpr std::array<BuildingType, 12> PetitionManager::buildingPool;
-
-// ============================================================
-//  Helper: inject a known Petition as the current petition.
-//  We expose generatePetition() publicly, so we control the
-//  building by subclassing; but for simplicity we test through
-//  the public API and use MockBuilding via acceptPetition().
-//
-//  A thin test subclass lets us plant specific buildings.
-// ============================================================
-
-class TestablePetitionManager : public PetitionManager {
-public:
-    // Replaces currentPetition with one wrapping the given MockBuilding.
-    // Caller must NOT delete mockBuilding – Petition owns it.
-    void injectCurrentPetition(MockBuilding* mockBuilding) {
-        // Reject the auto-generated current petition first
-        rejectPetition();
-        // The newly generated one is now current; we accept it to move it
-        // to under-construction, then delete it, and replace with our mock.
-        // Easier: just accept, then plant our custom one via
-        // a second helper that directly manipulates nextPetitionId.
-        // Instead, use the cleaner approach: accept the auto-generated
-        // petition (pushes it to construction), then manually push our
-        // mock-backed petition into underConstruction via acceptPetition
-        // after another reject/replace cycle.
-        //
-        // Actually the simplest correct approach: keep a ptr, accept it.
-        // We already called rejectPetition() which deleted the previous
-        // current and generated a new one.  Accept that new auto one to
-        // move it out of the way, then accept OUR mock:
-        acceptPetition();                              // moves auto petition to construction
-        // Now inject our mock as a raw Petition that we accept next:
-        Petition* p = new Petition(9000, mockBuilding);
-        getUnderConstructionPetitions(); // no-op, just keeps compile happy
-        // We can't easily replace currentPetition without friendship.
-        // Use the public path: push directly into under-construction.
-        const_cast<std::vector<Petition*>&>(
-            getUnderConstructionPetitions()).push_back(p);
-    }
-
-    // Cleaner helper: push a mock-backed Petition straight into
-    // under-construction, bypassing generatePetition().
-    void pushToConstruction(MockBuilding* mockBuilding, int id = 999) {
-        const_cast<std::vector<Petition*>&>(
-            getUnderConstructionPetitions())
-                .push_back(new Petition(id, mockBuilding));
-    }
-};
-
-// ================================================================
-//  Test Suites
-// ================================================================
-
-// ----------------------------------------------------------------
-// Petition – unit tests
-// ----------------------------------------------------------------
+}
 
 TEST(PetitionTest, StoresIdAndBuilding) {
-    auto* b = new MockBuilding(POWER_PLANT, 3, {{ENERGY, 500}});
-    Petition p(42, b);
-    EXPECT_EQ(p.getId(), 42);
-    EXPECT_EQ(p.getBuilding(), b);
+    auto* building = new StubBuilding(POWER_PLANT, 3, {{ENERGY, 500}});
+    Petition petition(42, building);
+
+    EXPECT_EQ(petition.getId(), 42);
+    EXPECT_EQ(petition.getBuilding(), building);
 }
 
-TEST(PetitionTest, BuildTickDelegatestoBuilding) {
-    auto* b = new MockBuilding(SOLAR_PANEL_FARM, 2, {{ENERGY, 100}});
-    Petition p(1, b);
+TEST(PetitionTest, BuildTickDelegatesToBuilding) {
+    Petition petition(1, new StubBuilding(SOLAR_PANEL_FARM, 2, {{ENERGY, 100}}));
 
-    // First tick – building not yet done
-    auto effects1 = p.buildTick();
-    EXPECT_TRUE(effects1.empty());
-    EXPECT_EQ(b->tickCount, 1);
+    const auto firstTick = petition.buildTick();
+    EXPECT_TRUE(firstTick.empty());
 
-    // Second tick – building completes
-    auto effects2 = p.buildTick();
-    EXPECT_FALSE(effects2.empty());
-    EXPECT_EQ(effects2[0].type,       ENERGY);
-    EXPECT_EQ(effects2[0].deltaValue, 100);
+    const auto secondTick = petition.buildTick();
+    ASSERT_EQ(secondTick.size(), 1u);
+    EXPECT_EQ(secondTick[0].type, ENERGY);
+    EXPECT_EQ(secondTick[0].deltaValue, 100);
 }
 
 TEST(PetitionTest, DestructorDeletesBuilding) {
-    // We need to observe destruction without dangling ptr access.
-    // Use a flag on the stack via a custom subclass.
     bool deleted = false;
-    struct TrackingBuilding : public Building {
-        bool& flag;
-        explicit TrackingBuilding(bool& f) : flag(f) {}
-        ~TrackingBuilding() override { flag = true; }
-        std::vector<ResourceEffect> buildTick() override { return {}; }
-        BuildingType getType() const override { return POWER_PLANT; }
-    };
 
     {
-        Petition p(1, new TrackingBuilding(deleted));
+        Petition petition(1, new TrackingBuilding(deleted));
         EXPECT_FALSE(deleted);
-    } // p destroyed here
+    }
+
     EXPECT_TRUE(deleted);
 }
 
 TEST(PetitionTest, IdsAreIndependent) {
-    Petition p1(1, new MockBuilding(WIND_TURBINE_FARM, 1, {}));
-    Petition p2(2, new MockBuilding(URBAN_GREENING,    1, {}));
-    EXPECT_NE(p1.getId(), p2.getId());
+    Petition first(1, new StubBuilding(WIND_TURBINE_FARM, 1, {}));
+    Petition second(2, new StubBuilding(URBAN_GREENING, 1, {}));
+
+    EXPECT_NE(first.getId(), second.getId());
 }
 
-// ----------------------------------------------------------------
-// PetitionManager – construction
-// ----------------------------------------------------------------
-
 TEST(PetitionManagerTest, HasCurrentPetitionOnConstruction) {
-    PetitionManager pm;
-    EXPECT_NE(pm.getCurrentPetition(), nullptr);
+    PetitionManager petitionManager;
+
+    EXPECT_NE(petitionManager.getCurrentPetition(), nullptr);
 }
 
 TEST(PetitionManagerTest, NoUnderConstructionPetitionsInitially) {
-    PetitionManager pm;
-    EXPECT_TRUE(pm.getUnderConstructionPetitions().empty());
+    PetitionManager petitionManager;
+
+    EXPECT_TRUE(petitionManager.getUnderConstructionPetitions().empty());
 }
 
 TEST(PetitionManagerTest, FirstPetitionIdIsOne) {
-    PetitionManager pm;
-    EXPECT_EQ(pm.getCurrentPetition()->getId(), 1);
+    PetitionManager petitionManager;
+
+    EXPECT_EQ(petitionManager.getCurrentPetition()->getId(), 1);
 }
 
-// ----------------------------------------------------------------
-// PetitionManager – acceptPetition
-// ----------------------------------------------------------------
-
 TEST(PetitionManagerTest, AcceptMovesCurrentToUnderConstruction) {
-    PetitionManager pm;
-    Petition* original = pm.getCurrentPetition();
-    pm.acceptPetition();
+    PetitionManager petitionManager;
+    Petition* original = petitionManager.getCurrentPetition();
 
-    const auto& uc = pm.getUnderConstructionPetitions();
-    EXPECT_EQ(uc.size(), 1u);
-    EXPECT_EQ(uc[0], original);
+    petitionManager.acceptPetition();
+
+    const auto& underConstruction = petitionManager.getUnderConstructionPetitions();
+    ASSERT_EQ(underConstruction.size(), 1u);
+    EXPECT_EQ(underConstruction[0], original);
 }
 
 TEST(PetitionManagerTest, AcceptGeneratesNewCurrentPetition) {
-    PetitionManager pm;
-    Petition* first = pm.getCurrentPetition();
-    pm.acceptPetition();
-    EXPECT_NE(pm.getCurrentPetition(), nullptr);
-    EXPECT_NE(pm.getCurrentPetition(), first);
+    PetitionManager petitionManager;
+    Petition* first = petitionManager.getCurrentPetition();
+
+    petitionManager.acceptPetition();
+
+    EXPECT_NE(petitionManager.getCurrentPetition(), nullptr);
+    EXPECT_NE(petitionManager.getCurrentPetition(), first);
 }
 
 TEST(PetitionManagerTest, AcceptIncrementsPetitionId) {
-    PetitionManager pm;
-    int firstId = pm.getCurrentPetition()->getId();
-    pm.acceptPetition();
-    EXPECT_EQ(pm.getCurrentPetition()->getId(), firstId + 1);
+    PetitionManager petitionManager;
+    const int firstId = petitionManager.getCurrentPetition()->getId();
+
+    petitionManager.acceptPetition();
+
+    EXPECT_EQ(petitionManager.getCurrentPetition()->getId(), firstId + 1);
 }
 
 TEST(PetitionManagerTest, MultipleAcceptsAccumulateUnderConstruction) {
-    PetitionManager pm;
-    pm.acceptPetition();
-    pm.acceptPetition();
-    pm.acceptPetition();
-    EXPECT_EQ(pm.getUnderConstructionPetitions().size(), 3u);
+    PetitionManager petitionManager;
+
+    petitionManager.acceptPetition();
+    petitionManager.acceptPetition();
+    petitionManager.acceptPetition();
+
+    EXPECT_EQ(petitionManager.getUnderConstructionPetitions().size(), 3u);
 }
 
-// ----------------------------------------------------------------
-// PetitionManager – rejectPetition
-// ----------------------------------------------------------------
-
 TEST(PetitionManagerTest, RejectDoesNotAddToUnderConstruction) {
-    PetitionManager pm;
-    pm.rejectPetition();
-    EXPECT_TRUE(pm.getUnderConstructionPetitions().empty());
+    PetitionManager petitionManager;
+
+    petitionManager.rejectPetition();
+
+    EXPECT_TRUE(petitionManager.getUnderConstructionPetitions().empty());
 }
 
 TEST(PetitionManagerTest, RejectGeneratesNewCurrentPetition) {
-    PetitionManager pm;
-    Petition* first = pm.getCurrentPetition();
-    pm.rejectPetition();
-    EXPECT_NE(pm.getCurrentPetition(), nullptr);
-    EXPECT_NE(pm.getCurrentPetition(), first);
+    PetitionManager petitionManager;
+    Petition* first = petitionManager.getCurrentPetition();
+
+    petitionManager.rejectPetition();
+
+    EXPECT_NE(petitionManager.getCurrentPetition(), nullptr);
+    EXPECT_NE(petitionManager.getCurrentPetition(), first);
 }
 
 TEST(PetitionManagerTest, RejectIncrementsPetitionId) {
-    PetitionManager pm;
-    int firstId = pm.getCurrentPetition()->getId();
-    pm.rejectPetition();
-    EXPECT_EQ(pm.getCurrentPetition()->getId(), firstId + 1);
+    PetitionManager petitionManager;
+    const int firstId = petitionManager.getCurrentPetition()->getId();
+
+    petitionManager.rejectPetition();
+
+    EXPECT_EQ(petitionManager.getCurrentPetition()->getId(), firstId + 1);
 }
 
-// ----------------------------------------------------------------
-// PetitionManager – tick, no completions
-// ----------------------------------------------------------------
-
 TEST(PetitionManagerTest, TickWithNoUnderConstructionReturnsEmpty) {
-    PetitionManager pm;
-    auto result = pm.tick();
+    PetitionManager petitionManager;
+
+    const auto result = petitionManager.tick();
+
     EXPECT_TRUE(result.empty());
 }
 
 TEST(PetitionManagerTest, TickBeforeCompletionReturnsEmptyAndKeepsPetition) {
-    TestablePetitionManager pm;
-    auto* b = new MockBuilding(HYDROELECTRIC_PLANT, 3, {{ENERGY, 200}});
-    pm.pushToConstruction(b);
+    PetitionManager petitionManager;
+    petitionManager.restoreUnderConstruction(makePetition(10, HYDROELECTRIC_PLANT, 3, {{ENERGY, 200}}));
 
-    auto result = pm.tick(); // tick 1 of 3
+    const auto result = petitionManager.tick();
+
     EXPECT_TRUE(result.empty());
-    EXPECT_EQ(pm.getUnderConstructionPetitions().size(), 1u);
+    EXPECT_EQ(petitionManager.getUnderConstructionPetitions().size(), 1u);
 }
 
-// ----------------------------------------------------------------
-// PetitionManager – tick, completions
-// ----------------------------------------------------------------
-
 TEST(PetitionManagerTest, TickCompletesAndRemovesPetition) {
-    TestablePetitionManager pm;
-    auto* b = new MockBuilding(POWER_PLANT, 1, {{ENERGY, 500}});
-    pm.pushToConstruction(b);
+    PetitionManager petitionManager;
+    petitionManager.restoreUnderConstruction(makePetition(10, POWER_PLANT, 1, {{ENERGY, 500}}));
 
-    auto result = pm.tick(); // single tick completes it
+    const auto result = petitionManager.tick();
+
     EXPECT_EQ(result.size(), 1u);
-    EXPECT_TRUE(pm.getUnderConstructionPetitions().empty());
+    EXPECT_TRUE(petitionManager.getUnderConstructionPetitions().empty());
 }
 
 TEST(PetitionManagerTest, TickReturnsCorrectBuildingTypeOnCompletion) {
-    TestablePetitionManager pm;
-    auto* b = new MockBuilding(WIND_TURBINE_FARM, 1, {{ENERGY, 100}});
-    pm.pushToConstruction(b);
+    PetitionManager petitionManager;
+    petitionManager.restoreUnderConstruction(makePetition(10, WIND_TURBINE_FARM, 1, {{ENERGY, 100}}));
 
-    auto result = pm.tick();
+    const auto result = petitionManager.tick();
+
     ASSERT_EQ(result.size(), 1u);
     EXPECT_EQ(result[0].type, WIND_TURBINE_FARM);
 }
 
 TEST(PetitionManagerTest, TickReturnsCorrectEffectsOnCompletion) {
-    TestablePetitionManager pm;
-    std::vector<ResourceEffect> fx = {{WATER, 300}, {CO2, -50}};
-    auto* b = new MockBuilding(WATER_TREATMENT_PLANT, 1, fx);
-    pm.pushToConstruction(b);
+    PetitionManager petitionManager;
+    const std::vector<ResourceEffect> effects = {{WATER, 300}, {CO2, -50}};
+    petitionManager.restoreUnderConstruction(makePetition(10, WATER_TREATMENT_PLANT, 1, effects));
 
-    auto result = pm.tick();
+    const auto result = petitionManager.tick();
+
     ASSERT_EQ(result.size(), 1u);
     ASSERT_EQ(result[0].effects.size(), 2u);
-    EXPECT_EQ(result[0].effects[0].type,       WATER);
+    EXPECT_EQ(result[0].effects[0].type, WATER);
     EXPECT_EQ(result[0].effects[0].deltaValue, 300);
-    EXPECT_EQ(result[0].effects[1].type,       CO2);
+    EXPECT_EQ(result[0].effects[1].type, CO2);
     EXPECT_EQ(result[0].effects[1].deltaValue, -50);
 }
 
 TEST(PetitionManagerTest, MultiTickBuildingCompletesAfterCorrectTicks) {
-    TestablePetitionManager pm;
-    auto* b = new MockBuilding(SOLAR_PANEL_FARM, 3, {{ENERGY, 999}});
-    pm.pushToConstruction(b);
+    PetitionManager petitionManager;
+    petitionManager.restoreUnderConstruction(makePetition(10, SOLAR_PANEL_FARM, 3, {{ENERGY, 999}}));
 
-    EXPECT_TRUE(pm.tick().empty()); // tick 1
-    EXPECT_TRUE(pm.tick().empty()); // tick 2
-    auto result = pm.tick();        // tick 3 – completes
+    EXPECT_TRUE(petitionManager.tick().empty());
+    EXPECT_TRUE(petitionManager.tick().empty());
+
+    const auto result = petitionManager.tick();
+
     EXPECT_EQ(result.size(), 1u);
-    EXPECT_TRUE(pm.getUnderConstructionPetitions().empty());
+    EXPECT_TRUE(petitionManager.getUnderConstructionPetitions().empty());
 }
 
 TEST(PetitionManagerTest, OnlyCompletedPetitionsAreRemovedEachTick) {
-    TestablePetitionManager pm;
-    auto* fast = new MockBuilding(URBAN_GREENING,        1, {{MONEY,  100}});
-    auto* slow = new MockBuilding(AIRPORT_EXPANSION,     3, {{MONEY, 9999}});
-    pm.pushToConstruction(fast, 10);
-    pm.pushToConstruction(slow, 11);
+    PetitionManager petitionManager;
+    petitionManager.restoreUnderConstruction(makePetition(10, URBAN_GREENING, 1, {{MONEY, 100}}));
+    petitionManager.restoreUnderConstruction(makePetition(11, AIRPORT_EXPANSION, 3, {{MONEY, 9999}}));
 
-    auto result = pm.tick(); // fast completes, slow does not
+    const auto result = petitionManager.tick();
+
     EXPECT_EQ(result.size(), 1u);
-    EXPECT_EQ(pm.getUnderConstructionPetitions().size(), 1u);
-    EXPECT_EQ(pm.getUnderConstructionPetitions()[0]->getId(), 11);
+    EXPECT_EQ(petitionManager.getUnderConstructionPetitions().size(), 1u);
+    EXPECT_EQ(petitionManager.getUnderConstructionPetitions()[0]->getId(), 11);
 }
 
 TEST(PetitionManagerTest, MultipleCompletionsInOneTick) {
-    TestablePetitionManager pm;
-    auto* b1 = new MockBuilding(ROAD_IMPROVEMENT,    1, {{MONEY,  50}});
-    auto* b2 = new MockBuilding(INDUSTRIAL_ZONE,     1, {{ENERGY, 75}});
-    pm.pushToConstruction(b1, 20);
-    pm.pushToConstruction(b2, 21);
+    PetitionManager petitionManager;
+    petitionManager.restoreUnderConstruction(makePetition(20, ROAD_IMPROVEMENT, 1, {{MONEY, 50}}));
+    petitionManager.restoreUnderConstruction(makePetition(21, INDUSTRIAL_ZONE, 1, {{ENERGY, 75}}));
 
-    auto result = pm.tick();
+    const auto result = petitionManager.tick();
+
     EXPECT_EQ(result.size(), 2u);
-    EXPECT_TRUE(pm.getUnderConstructionPetitions().empty());
+    EXPECT_TRUE(petitionManager.getUnderConstructionPetitions().empty());
 }
 
-// ----------------------------------------------------------------
-// PetitionManager – generatePetition
-// ----------------------------------------------------------------
-
 TEST(PetitionManagerTest, GeneratedPetitionHasValidBuildingType) {
-    PetitionManager pm;
+    PetitionManager petitionManager;
     static const std::array<BuildingType, 12> validTypes = {
         POWER_PLANT, WATER_TREATMENT_PLANT, SOLAR_PANEL_FARM,
         SOLAR_PANEL_ROOFTOPS, PUBLIC_TRANSPORT_UPGRADE, WIND_TURBINE_FARM,
@@ -534,53 +279,66 @@ TEST(PetitionManagerTest, GeneratedPetitionHasValidBuildingType) {
         INDUSTRIAL_ZONE, AIRPORT_EXPANSION, ROAD_IMPROVEMENT
     };
 
-    // Generate many petitions and verify all have a type from the pool
     for (int i = 0; i < 50; ++i) {
-        Petition* p = pm.generatePetition();
-        BuildingType t = p->getBuilding()->getType();
-        bool found = std::find(validTypes.begin(), validTypes.end(), t) != validTypes.end();
-        EXPECT_TRUE(found) << "Unexpected building type: " << t;
-        delete p;
+        Petition* petition = petitionManager.generatePetition();
+        const BuildingType type = petition->getBuilding()->getType();
+        const bool found = std::find(validTypes.begin(), validTypes.end(), type) != validTypes.end();
+        EXPECT_TRUE(found) << "Unexpected building type: " << type;
+        delete petition;
     }
 }
 
 TEST(PetitionManagerTest, GeneratedPetitionsHaveMonotonicallyIncreasingIds) {
-    PetitionManager pm;
-    int lastId = pm.getCurrentPetition()->getId();
+    PetitionManager petitionManager;
+    int lastId = petitionManager.getCurrentPetition()->getId();
+
     for (int i = 0; i < 10; ++i) {
-        Petition* p = pm.generatePetition();
-        EXPECT_GT(p->getId(), lastId);
-        lastId = p->getId();
-        delete p;
+        Petition* petition = petitionManager.generatePetition();
+        EXPECT_GT(petition->getId(), lastId);
+        lastId = petition->getId();
+        delete petition;
     }
 }
 
-// ----------------------------------------------------------------
-// PetitionManager – accept then tick interaction
-// ----------------------------------------------------------------
+TEST(PetitionManagerTest, AcceptThenTickWithRealBuildingDoesNotCrash) {
+    PetitionManager petitionManager;
 
-TEST(PetitionManagerTest, AcceptThenTickCompletesBuilding) {
-    PetitionManager pm;
-    // The current petition wraps a 1-tick MockBuilding via createBuilding stub
-    pm.acceptPetition();
-    auto result = pm.tick();
-    // stub buildings complete in 1 tick
-    EXPECT_EQ(result.size(), 1u);
+    petitionManager.acceptPetition();
+
+    EXPECT_NO_THROW({
+        const auto result = petitionManager.tick();
+        (void)result;
+    });
 }
 
-TEST(PetitionManagerTest, RejectThenAcceptThenTick) {
-    PetitionManager pm;
-    pm.rejectPetition();   // discard first
-    pm.acceptPetition();   // accept second
-    auto result = pm.tick();
-    EXPECT_EQ(result.size(), 1u);
+TEST(PetitionManagerTest, RejectThenAcceptThenTickWithRealBuildingDoesNotCrash) {
+    PetitionManager petitionManager;
+
+    petitionManager.rejectPetition();
+    petitionManager.acceptPetition();
+
+    EXPECT_NO_THROW({
+        const auto result = petitionManager.tick();
+        (void)result;
+    });
 }
 
-// ================================================================
-//  main
-// ================================================================
+TEST(PetitionManagerTest, RestoreCurrentPetitionReplacesAutoGeneratedPetition) {
+    PetitionManager petitionManager;
 
-int main(int argc, char** argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    petitionManager.restoreCurrentPetition(makePetition(77, SOLAR_PANEL_ROOFTOPS, 2, {{ENERGY, 75}}));
+
+    ASSERT_NE(petitionManager.getCurrentPetition(), nullptr);
+    EXPECT_EQ(petitionManager.getCurrentPetition()->getId(), 77);
+    EXPECT_EQ(petitionManager.getCurrentPetition()->getBuilding()->getType(), SOLAR_PANEL_ROOFTOPS);
+}
+
+TEST(PetitionManagerTest, RestoreHelpersAdvanceNextGeneratedId) {
+    PetitionManager petitionManager;
+
+    petitionManager.restoreCurrentPetition(makePetition(100, SOLAR_PANEL_ROOFTOPS, 2, {{ENERGY, 75}}));
+    Petition* generated = petitionManager.generatePetition();
+
+    EXPECT_GT(generated->getId(), 100);
+    delete generated;
 }
