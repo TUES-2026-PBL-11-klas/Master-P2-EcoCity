@@ -9,15 +9,16 @@
 #include <optional>
 
 #include "../api_types.pb.h"
+#include "ISocketServer.hpp"
 
-class SocketServer {
+class SocketServer : public ISocketServer {
     private:
         int port;
-        std::atomic<bool> running;      // Flag both threads can check, atomic is used because plain bool is not thread-safe
-        std::thread listenerThread;     // thread that waits and gets info from UI, runs listenLoop() in parallel to the main game loop
+        std::atomic<bool> running;
+        std::thread listenerThread;
 
-        std::mutex actionMutex;         // Protects pendingAction, since it's shared between threads
-        std::optional<game_api::v1::UIAction> pendingAction;    // Socket thread writes here, game thread reads it
+        std::mutex actionMutex;
+        std::optional<game_api::v1::UIAction> pendingAction;
 
         // Promise/future pair used to signal startup success or failure back to
         // the constructor. The listener thread fulfils the promise once it either
@@ -34,16 +35,11 @@ class SocketServer {
 
     public:
         explicit SocketServer(int port);
-        ~SocketServer();
+        ~SocketServer() override;
 
-        // Called from socket thread - stores coming UIActions
-        // Called from game thread - reads and clears the latest action
-        std::optional<game_api::v1::UIAction> pollAction();
-
-        // Called from game thread: sends GameState to UI
-        void sendGameState(const game_api::v1::GameState& state);
-
-        void stop();    // closes socket and stops the listener thread
+        std::optional<game_api::v1::UIAction> pollAction() override;
+        void sendGameState(const game_api::v1::GameState& state) override;
+        void stop() override;
 };
 
 #endif

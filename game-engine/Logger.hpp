@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <chrono>
+#include <filesystem>
 #include <mutex>
 #include <string>
 
@@ -47,6 +48,7 @@ public:
         auto ms  = std::chrono::duration_cast<std::chrono::milliseconds>(
                     now.time_since_epoch()).count();
 
+        std::filesystem::create_directories("logs");
         std::string filename = "logs/game_" + std::to_string(ms) + ".log";
 
         static Logger inst(filename);
@@ -75,7 +77,7 @@ public:
         const std::string line = oss.str();
         file_  << line;
         file_.flush();
-        std::cout << line;
+        std::cout << line; // also print to console for real-time visibility
     }
 };
 
