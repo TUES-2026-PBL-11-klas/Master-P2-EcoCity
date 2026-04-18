@@ -50,8 +50,7 @@ bool GameService::tick()
     try {
         readPlayerInput();
     } catch (const InsufficientResourcesException& e) {
-        LOG_WARN("GameService", "petition_rejected_insufficient_funds", e.what());
-        petitionManager->rejectPetition();  // treat unaffordable accept as a reject
+        LOG_WARN("GameService", "petition_insufficient_funds", e.what());
     }
 
     const std::vector<CompletedConstruction> completedConstructions = petitionManager->tick();
