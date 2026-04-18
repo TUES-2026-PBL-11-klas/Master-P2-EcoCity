@@ -114,7 +114,12 @@ int main() {
     if (save.found)
     {
         LOG_INFO("main", "loadGame", "Saved game found, resuming.");
-        restoreGame(save, resourceManager, petitionManager, city);
+        try{
+            restoreGame(save, resourceManager, petitionManager, city);
+        } catch (const std::exception& e) {
+            LOG_ERROR("main", "restoreGame", std::string("Failed to restore game state: ") + e.what());
+            return 1;
+        }
     }
     else
     {
