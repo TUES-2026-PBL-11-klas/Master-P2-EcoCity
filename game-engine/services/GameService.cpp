@@ -54,10 +54,13 @@ bool GameService::tick()
     }
 
     const std::vector<CompletedConstruction> completedConstructions = petitionManager->tick();
-    for (const CompletedConstruction& construction : completedConstructions) {
+    std::for_each(completedConstructions.begin(),
+              completedConstructions.end(),
+              [&](const CompletedConstruction& construction)
+    {
         resourceManager->applyEffect(construction.effects);
         city->addBuilding(construction.type);
-    }
+    });
 
     resourceManager->tick();
     handlePopulationScaling();
@@ -82,12 +85,19 @@ bool GameService::tick()
 
 bool GameService::checkGameOver()
 {
-    for(const Resource& resource : *resourceManager)
+    bool hasInvalidResource = std::any_of(
+    resourceManager->begin(),
+    resourceManager->end(),
+    [&](const Resource& resource)
     {
-        if (resource.getCurrentValue() <= 0 && resource.getType() != CO2) {
-            LOG_WARN("GameService", "game_over", "reason=resource_depleted");
-            return true;
-        }
+        return resource.getCurrentValue() <= 0 &&
+               resource.getType() != CO2;
+    });
+
+    if (hasInvalidResource)
+    {
+        LOG_WARN("GameService", "game_over", "reason=resource_depleted");
+        return true;
     }
 
     if(resourceManager->getResourceValue(CO2) >= MAX_CO2)
@@ -143,9 +153,13 @@ game_api::v1::GameState GameService::buildGameState() const
 {
     game_api::v1::GameState state;
 
-    for (const auto& [type, count] : city->getBuildings()) {
+   std::for_each(city->getBuildings().begin(),
+              city->getBuildings().end(),
+              [&](const auto& entry)
+    {
+        const auto& [type, count] = entry;
         (*state.mutable_building_counts())[static_cast<int>(type)] = count;
-    }
+    });
 
     const Petition* petition = petitionManager->getCurrentPetition();
     if (petition != nullptr && petition->getBuilding() != nullptr) {
@@ -175,42 +189,50 @@ game_api::v1::GameState GameService::buildGameState() const
     return state;
 }
 
-void GameService::handlePopulationScaling() {
-    long long int currentPop = resourceManager->getResourceValue(POPULATION);
+void GameService::handlePopulationScaling()
+{
+    long long currentPop = resourceManager->getResourceValue(POPULATION);
 
-    if (currentPop >= nextPopulationGoal) {
-        nextPopulationGoal = static_cast<long long int>(nextPopulationGoal * SCALING_FACTOR);
+    if (currentPop < nextPopulationGoal)
+        return;
 
-        for (auto& resource : *resourceManager) {
-            ResourceType type = resource.getType();
-            long long int newDelta;
-            long long int currentDelta = resource.getDeltaValue();
-            if (type == WATER || type == ENERGY) {
-                if(currentDelta < 0){
-                    newDelta = static_cast<long long int>(currentDelta * demandIncrease);
-                }
-                else{
-                    newDelta = static_cast<long long int>(currentDelta * (2 - demandIncrease));
-                }
-                resourceManager->setDeltaForResourceType(type, newDelta);
-            }
-            else if (type == CO2) {
-                if(currentDelta > 0)
-                {
-                    newDelta = static_cast<long long int>(currentDelta * demandIncrease);
-                    resourceManager->setDeltaForResourceType(type, newDelta);
-                }
-                else {
-                    newDelta = currentDelta - static_cast<long long int>(currentDelta * (2 - demandIncrease));
-                    resourceManager->setDeltaForResourceType(type, newDelta);
-                }
-            }
-            else if(type == MONEY)
-            {
-                newDelta = static_cast<long long int>(currentDelta * demandIncrease);
-                resourceManager->setDeltaForResourceType(type, newDelta);
-            }
+    nextPopulationGoal = static_cast<long long>(nextPopulationGoal * SCALING_FACTOR);
+
+    auto applyDeltaRule = [&](ResourceType type, long long currentDelta) -> long long
+    {
+        if (type == WATER || type == ENERGY)
+        {
+            return (currentDelta < 0)
+                ? static_cast<long long>(currentDelta * demandIncrease)
+                : static_cast<long long>(currentDelta * (2 - demandIncrease));
         }
-        LOG_DEBUG("GameService", "population_milestone_reached", "new_goal=" + std::to_string(nextPopulationGoal));
+
+        if (type == CO2)
+        {
+            return (currentDelta > 0)
+                ? static_cast<long long>(currentDelta * demandIncrease)
+                : currentDelta - static_cast<long long>(currentDelta * (2 - demandIncrease));
+        }
+
+        if (type == MONEY)
+        {
+            return static_cast<long long>(currentDelta * demandIncrease);
+        }
+
+        return currentDelta;
+    };
+
+    for (auto& resource : *resourceManager)
+    {
+        ResourceType type = resource.getType();
+        long long currentDelta = resource.getDeltaValue();
+
+        long long newDelta = applyDeltaRule(type, currentDelta);
+
+        resourceManager->setDeltaForResourceType(type, newDelta);
     }
+
+    LOG_DEBUG("GameService",
+              "population_milestone_reached",
+              "new_goal=" + std::to_string(nextPopulationGoal));
 }
