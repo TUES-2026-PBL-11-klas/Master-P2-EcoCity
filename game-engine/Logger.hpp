@@ -77,7 +77,7 @@ public:
         const std::string line = oss.str();
         file_  << line;
         file_.flush();
-        std::cout << line;
+        std::cout << line; // also print to console for real-time visibility
     }
 };
 

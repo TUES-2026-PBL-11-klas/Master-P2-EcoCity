@@ -340,3 +340,196 @@ TEST_F(GameServiceTest, SentGameStateIncludesCompletedBuildingCounts) {
     ASSERT_NE(iterator, counts.end());
     EXPECT_EQ(iterator->second, 1);
 }
+
+TEST_F(GameServiceTest, SentGameStateIncludesResourceValues) {
+    gameService.tick();
+
+    ASSERT_FALSE(socketServer.sentStates.empty());
+    const auto& state = socketServer.sentStates.back();
+    const auto& resources = state.resources();
+    EXPECT_TRUE(resources.count(WATER));
+    EXPECT_TRUE(resources.count(ENERGY));
+    EXPECT_TRUE(resources.count(MONEY));
+    EXPECT_TRUE(resources.count(POPULATION));
+    EXPECT_TRUE(resources.count(CO2));
+}
+
+// ── handlePopulationScaling ──────────────────────────────────────────────────
+
+TEST_F(GameServiceTest, PopulationBelowGoalDoesNotScaleDeltas) {
+    // Default population (1 000 000) is below nextPopulationGoal (1 200 000)
+    resourceManager.setDeltaForResourceType(WATER, -10000);
+    const LLint waterDeltaBefore = resourceManager.getDeltaForResourceType(WATER);
+
+    gameService.handlePopulationScaling();
+
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(WATER), waterDeltaBefore);
+}
+
+TEST_F(GameServiceTest, PopulationAtGoalTriggersScaling) {
+    // Push population up to exactly the goal
+    resourceManager.changeResourceValue(POPULATION, 1200000 - resourceManager.getResourceValue(POPULATION));
+    resourceManager.setDeltaForResourceType(POPULATION, 0);
+    resourceManager.setDeltaForResourceType(WATER, -10000);
+    const LLint expected = static_cast<LLint>(-10000 * demandIncrease); // -11000
+
+    gameService.handlePopulationScaling();
+
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(WATER), expected);
+}
+
+TEST_F(GameServiceTest, PopulationScalingWaterNegativeDeltaIncreasesConsumption) {
+    resourceManager.changeResourceValue(POPULATION, 1200000 - resourceManager.getResourceValue(POPULATION));
+    resourceManager.setDeltaForResourceType(POPULATION, 0);
+    resourceManager.setDeltaForResourceType(WATER, -10000);
+
+    gameService.handlePopulationScaling();
+
+    // Negative delta grows more negative: -10000 * 1.10 = -11000
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(WATER), -11000LL);
+}
+
+TEST_F(GameServiceTest, PopulationScalingWaterPositiveDeltaDecreases) {
+    resourceManager.changeResourceValue(POPULATION, 1200000 - resourceManager.getResourceValue(POPULATION));
+    resourceManager.setDeltaForResourceType(POPULATION, 0);
+    resourceManager.setDeltaForResourceType(WATER, 5000);
+
+    gameService.handlePopulationScaling();
+
+    // Positive delta shrinks: 5000 * (2 - 1.10) = 5000 * 0.90 = 4500
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(WATER), static_cast<LLint>(5000 * (2 - demandIncrease)));
+}
+
+TEST_F(GameServiceTest, PopulationScalingEnergyNegativeDeltaIncreasesConsumption) {
+    resourceManager.changeResourceValue(POPULATION, 1200000 - resourceManager.getResourceValue(POPULATION));
+    resourceManager.setDeltaForResourceType(POPULATION, 0);
+    resourceManager.setDeltaForResourceType(ENERGY, -8000);
+
+    gameService.handlePopulationScaling();
+
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(ENERGY), static_cast<LLint>(-8000 * demandIncrease));
+}
+
+TEST_F(GameServiceTest, PopulationScalingCO2PositiveDeltaIncreases) {
+    resourceManager.changeResourceValue(POPULATION, 1200000 - resourceManager.getResourceValue(POPULATION));
+    resourceManager.setDeltaForResourceType(POPULATION, 0);
+    resourceManager.setDeltaForResourceType(CO2, 10000);
+
+    gameService.handlePopulationScaling();
+
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(CO2), static_cast<LLint>(10000 * demandIncrease));
+}
+
+TEST_F(GameServiceTest, PopulationScalingCO2NegativeDeltaChanges) {
+    resourceManager.changeResourceValue(POPULATION, 1200000 - resourceManager.getResourceValue(POPULATION));
+    resourceManager.setDeltaForResourceType(POPULATION, 0);
+    resourceManager.setDeltaForResourceType(CO2, -5000);
+
+    gameService.handlePopulationScaling();
+
+    // newDelta = currentDelta - currentDelta * (2 - demandIncrease)
+    // = -5000 - (-5000 * 0.90) = -5000 + 4500 = -500
+    const LLint currentDelta = -5000;
+    const LLint expected = currentDelta - static_cast<LLint>(currentDelta * (2 - demandIncrease));
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(CO2), expected);
+}
+
+TEST_F(GameServiceTest, PopulationScalingMoneyDeltaIncreases) {
+    resourceManager.changeResourceValue(POPULATION, 1200000 - resourceManager.getResourceValue(POPULATION));
+    resourceManager.setDeltaForResourceType(POPULATION, 0);
+    resourceManager.setDeltaForResourceType(MONEY, 10000);
+
+    gameService.handlePopulationScaling();
+
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(MONEY), static_cast<LLint>(10000 * demandIncrease));
+}
+
+TEST_F(GameServiceTest, PopulationScalingDoesNotChangePopulationDelta) {
+    resourceManager.changeResourceValue(POPULATION, 1200000 - resourceManager.getResourceValue(POPULATION));
+    const LLint popDeltaBefore = resourceManager.getDeltaForResourceType(POPULATION);
+    resourceManager.setDeltaForResourceType(POPULATION, 0);
+
+    gameService.handlePopulationScaling();
+
+    // POPULATION has no branch in handlePopulationScaling — its delta is unchanged
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(POPULATION), 0);
+    (void)popDeltaBefore;
+}
+
+TEST_F(GameServiceTest, PopulationScalingNextGoalAdvancesByScalingFactor) {
+    // Trigger scaling once — then confirm the next tick at same population does NOT scale again
+    resourceManager.changeResourceValue(POPULATION, 1200000 - resourceManager.getResourceValue(POPULATION));
+    resourceManager.setDeltaForResourceType(POPULATION, 0);
+    resourceManager.setDeltaForResourceType(WATER, -10000);
+
+    gameService.handlePopulationScaling(); // triggers, goal becomes 1 440 000
+    const LLint deltaAfterFirst = resourceManager.getDeltaForResourceType(WATER);
+
+    gameService.handlePopulationScaling(); // population still 1 200 000 < 1 440 000 → no-op
+
+    EXPECT_EQ(resourceManager.getDeltaForResourceType(WATER), deltaAfterFirst);
+}
+
+// ── Building getters, setters and guards ─────────────────────────────────────
+
+namespace {
+class ConcreteBuilding : public Building {
+    public:
+        ConcreteBuilding(BuildingType type, LLint cost, int ticks, std::vector<ResourceEffect> fx)
+            : Building(type, cost, ticks) { effects = std::move(fx); }
+    private:
+        std::vector<ResourceEffect> Effects() const override { return effects; }
+};
+}
+
+TEST(BuildingTest, GettersReturnConstructorValues) {
+    ConcreteBuilding b(POWER_PLANT, 5000, 3, {{ENERGY, 500}});
+
+    EXPECT_EQ(b.getType(), POWER_PLANT);
+    EXPECT_EQ(b.getBuildCost(), 5000LL);
+    EXPECT_EQ(b.getTicksToComplete(), 3);
+    ASSERT_EQ(b.getEffects().size(), 1u);
+    EXPECT_EQ(b.getEffects()[0].type, ENERGY);
+    EXPECT_EQ(b.getEffects()[0].deltaValue, 500);
+}
+
+TEST(BuildingTest, SetTicksToCompleteUpdatesValue) {
+    ConcreteBuilding b(SOLAR_PANEL_FARM, 0, 1, {});
+
+    b.setTicksToComplete(7);
+
+    EXPECT_EQ(b.getTicksToComplete(), 7);
+}
+
+TEST(BuildingTest, SetTicksToCompleteNegativeClampsToZero) {
+    ConcreteBuilding b(SOLAR_PANEL_FARM, 0, 5, {});
+
+    b.setTicksToComplete(-3);
+
+    EXPECT_EQ(b.getTicksToComplete(), 0);
+}
+
+TEST(BuildingTest, SetBuildCostUpdatesValue) {
+    ConcreteBuilding b(WIND_TURBINE_FARM, 1000, 1, {});
+
+    b.setBuildCost(9999);
+
+    EXPECT_EQ(b.getBuildCost(), 9999LL);
+}
+
+TEST(BuildingTest, SetBuildCostNegativeClampsToZero) {
+    ConcreteBuilding b(WIND_TURBINE_FARM, 1000, 1, {});
+
+    b.setBuildCost(-500);
+
+    EXPECT_EQ(b.getBuildCost(), 0LL);
+}
+
+TEST(BuildingTest, BuildTickAlreadyCompletedReturnsEmpty) {
+    ConcreteBuilding b(URBAN_GREENING, 0, 1, {{MONEY, 100}});
+    b.buildTick(); // completes the building (ticks = 0 now)
+
+    const auto result = b.buildTick(); // called again after completion
+
+    EXPECT_TRUE(result.empty());
+}
