@@ -1,6 +1,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <memory>
 #include <stdexcept>
 
 #include "services/GameService.hpp"
@@ -133,13 +134,26 @@ int main() {
         }
     }
 
-    GameService gameService(&resourceManager, &petitionManager, &city, &socketServer, &gameRepository, gameId);
+    std::unique_ptr<GameService> gameService;
+    try {
+        gameService = std::make_unique<GameService>(
+            &resourceManager,
+            &petitionManager,
+            &city,
+            &socketServer,
+            &gameRepository,
+            gameId
+        );
+    } catch (const std::exception& e) {
+        LOG_ERROR("main", "gameService", std::string("Could not initialize game service: ") + e.what());
+        return 1;
+    }
 
     bool endGame = false;
     try {
         while (!endGame)
         {
-            endGame = gameService.tick();
+            endGame = gameService->tick();
             std::this_thread::sleep_for(std::chrono::milliseconds(250));
         }
     } catch (const std::exception& e) {
