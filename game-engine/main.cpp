@@ -1,6 +1,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <stdexcept>
 
 #include "services/GameService.hpp"
 #include "services/ResourceManager.hpp"
@@ -70,10 +71,12 @@ static void restoreGame(
         const auto& pd = save.currentPetition;
         Building* building = createBuilding(pd.buildingType);
 
-        if (building != nullptr) {
-            building->setTicksToComplete(pd.ticksRemaining);
-            building->setBuildCost(pd.cost);
+        if (building == nullptr) {
+            throw std::invalid_argument("Invalid building type in saved current petition");
         }
+
+        building->setTicksToComplete(pd.ticksRemaining);
+        building->setBuildCost(pd.cost);
 
         Petition* petition = new Petition(pd.id, building);
         petitionManager.restoreCurrentPetition(petition);
