@@ -1,6 +1,6 @@
 #include "PetitionManager.hpp"
-#include "../Logger.hpp"
-#include "../Tracer.hpp"
+#include "../observability/Logger.hpp"
+#include "../observability/Tracer.hpp"
 
 PetitionManager::PetitionManager()
 : currentPetition(nullptr), randomEngine(std::random_device{}()), nextPetitionId(1)

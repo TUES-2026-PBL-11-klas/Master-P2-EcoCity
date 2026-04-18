@@ -1,6 +1,6 @@
 #include "GameService.hpp"
-#include "../Logger.hpp"
-#include "../Tracer.hpp"
+#include "../observability/Logger.hpp"
+#include "../observability/Tracer.hpp"
 #include <filesystem>
 #include <iostream>
 

@@ -21,8 +21,8 @@
 #include "../domain/ResourceEffect.hpp"
 #include "../domain/ResourceType.hpp"
 
-#include "../Logger.hpp"
-#include "../Tracer.hpp"
+#include "../observability/Logger.hpp"
+#include "../observability/Tracer.hpp"
 
 using bsoncxx::builder::basic::document;
 using bsoncxx::builder::basic::kvp;

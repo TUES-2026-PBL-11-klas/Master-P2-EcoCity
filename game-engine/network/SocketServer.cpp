@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cstring>
 
-#include "../Logger.hpp"
+#include "../observability/Logger.hpp"
 
 #ifdef _WIN32
     #include <winsock2.h>
