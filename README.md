@@ -49,7 +49,6 @@ EcoCity е игра от тип city builder, направена за учили
 │   ├── network/
 │   │   └── SocketServer.hpp / .cpp  # Отговаря за комуникация между game engine и UI.
 │   │
-# at construction if the port cannot be bound.
 │   │
 │   ├── persistence/
 │   │   └── MongoGameRepository.hpp / .cpp  # Запазва и зарежда играта
