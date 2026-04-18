@@ -2,6 +2,7 @@
 #define SOCKET_SERVER_H
 
 #include <atomic>
+#include <future>
 #include <mutex>
 #include <thread>
 #include <string>
@@ -19,6 +20,12 @@ class SocketServer : public ISocketServer {
         std::mutex actionMutex;
         std::optional<game_api::v1::UIAction> pendingAction;
 
+        // Promise/future pair used to signal startup success or failure back to
+        // the constructor. The listener thread fulfils the promise once it either
+        // starts listening successfully or hits a fatal socket error.
+        std::promise<void> startupPromise_;
+
+        // We all know what file decriptors are, right? that is what fd stands for
         int serverFd;
         int clientFd;
 

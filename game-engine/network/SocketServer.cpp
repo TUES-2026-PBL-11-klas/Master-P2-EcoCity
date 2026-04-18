@@ -1,6 +1,7 @@
 #include "SocketServer.hpp"
 #include <iostream>
 #include <cstring>
+#include <stdexcept>
 
 #include "../Logger.hpp"
 
@@ -27,6 +28,11 @@ SocketServer::SocketServer(int port)
     #endif
 
     listenerThread = std::thread(&SocketServer::listenLoop, this);
+
+    // Block until listenLoop signals that the socket is ready (or failed).
+    // If it failed, get_future().get() rethrows the stored exception so
+    // the caller sees a std::runtime_error instead of a silent background failure.
+    startupPromise_.get_future().get();
 }
 
 SocketServer::~SocketServer()
@@ -51,6 +57,10 @@ void SocketServer::listenLoop()
     serverFd = socket(AF_INET, SOCK_STREAM, 0);
     if (serverFd == INVALID_SOCKET) {
         LOG_ERROR("SocketServer", "socket_fail", "socket_creation_failed");
+        // Propagate the failure to the constructor via the promise.
+        startupPromise_.set_exception(
+            std::make_exception_ptr(
+                std::runtime_error("SocketServer: failed to create socket")));
         return;
     }
 
@@ -68,11 +78,18 @@ void SocketServer::listenLoop()
 
     if (bind(serverFd, (sockaddr*)&addr, sizeof(addr)) == SOCKET_ERROR) {
         LOG_ERROR("SocketServer", "socket_fail", "socket_bind_failed");
+        startupPromise_.set_exception(
+            std::make_exception_ptr(
+                std::runtime_error("SocketServer: failed to bind on port " + std::to_string(port))));
         return;
     }
 
-    listen(serverFd, 1);
+    listen(serverFd, 1); // Listen for incoming connections, backlog of 1 is enough since we only expect one client UI
+
     LOG_INFO("SocketServer", "waiting_connection", "port=" + std::to_string(port));
+
+    // Signal the constructor that setup succeeded; it is now safe to proceed.
+    startupPromise_.set_value();
 
     sockaddr_in clientAddr{};
     socklen_t clientLen = sizeof(clientAddr);
