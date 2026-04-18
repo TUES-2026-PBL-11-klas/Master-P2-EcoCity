@@ -167,7 +167,7 @@ SavedGame::PetitionData readPetitionDoc(const bsoncxx::document::view& doc)
 }
 
 MongoGameRepository::MongoGameRepository(const std::string& connectionString, const std::string& databaseName)
-    : instance(), client(mongocxx::uri{connectionString}), databaseName(databaseName) {}
+    : client(mongocxx::uri{connectionString}), databaseName(databaseName) {}
 
 void MongoGameRepository::saveGame(
     const std::string& gameId,
