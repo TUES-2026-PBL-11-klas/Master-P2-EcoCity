@@ -71,9 +71,10 @@ TEST(ResourceManagerTest, DefaultInitialValues) {
 }
 
 TEST(ResourceManagerTest, GetResourcesReturnsAllFive) {
-    ResourceManager resourceManager;
+    ResourceManager rm;
 
-    EXPECT_EQ(resourceManager.getResources().size(), 5u);
+    const auto& resources = rm.getResources();
+    EXPECT_EQ(resources.size(), 5u);
 }
 
 TEST(ResourceManagerTest, TickWithZeroDeltaChangesNothing) {

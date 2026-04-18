@@ -148,7 +148,9 @@ TEST_F(GameServiceTest, TickSendsGameStateToSocketServer) {
     EXPECT_FALSE(gameService.tick());
 
     ASSERT_EQ(socketServer.sentStates.size(), 1u);
-    EXPECT_TRUE(socketServer.sentStates.back().has_current_petition());
+
+    const auto& state = socketServer.sentStates.back();
+    EXPECT_TRUE(state.has_current_petition());
 }
 
 TEST_F(GameServiceTest, CompletedConstructionAddsBuildingToCity) {
@@ -293,6 +295,10 @@ TEST_F(GameServiceTest, GameOverWhenBothConditionsMet) {
 
 TEST_F(GameServiceTest, AcceptedPetitionMovesIntoConstructionQueue) {
     Petition* current = petitionManager.getCurrentPetition();
+    ASSERT_NE(current, nullptr);
+
+    const int currentId = current->getId();
+
     game_api::v1::UIAction action;
     action.mutable_petition_response()->set_responded(true);
     action.mutable_petition_response()->set_accepted(true);
@@ -301,11 +307,19 @@ TEST_F(GameServiceTest, AcceptedPetitionMovesIntoConstructionQueue) {
     gameService.tick();
 
     ASSERT_EQ(petitionManager.getUnderConstructionPetitions().size(), 1u);
-    EXPECT_EQ(petitionManager.getUnderConstructionPetitions()[0], current);
+
+    const Petition* stored = petitionManager.getUnderConstructionPetitions()[0];
+    ASSERT_NE(stored, nullptr);
+
+    EXPECT_EQ(stored->getId(), currentId);
 }
 
 TEST_F(GameServiceTest, RejectedPetitionDoesNotEnterConstructionQueue) {
     Petition* current = petitionManager.getCurrentPetition();
+    ASSERT_NE(current, nullptr);
+
+    const int currentId = current->getId();
+
     game_api::v1::UIAction action;
     action.mutable_petition_response()->set_responded(true);
     action.mutable_petition_response()->set_accepted(false);
@@ -314,7 +328,11 @@ TEST_F(GameServiceTest, RejectedPetitionDoesNotEnterConstructionQueue) {
     gameService.tick();
 
     EXPECT_TRUE(petitionManager.getUnderConstructionPetitions().empty());
-    EXPECT_NE(petitionManager.getCurrentPetition(), current);
+
+    const Petition* newCurrent = petitionManager.getCurrentPetition();
+    ASSERT_NE(newCurrent, nullptr);
+
+    EXPECT_NE(newCurrent->getId(), currentId);
 }
 
 TEST_F(GameServiceTest, SaveActionCallsRepository) {

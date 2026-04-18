@@ -110,29 +110,34 @@ TEST(PetitionManagerTest, NoUnderConstructionPetitionsInitially) {
 
 TEST(PetitionManagerTest, FirstPetitionIdIsOne) {
     PetitionManager petitionManager;
-
+    ASSERT_NE(petitionManager.getCurrentPetition(), nullptr);
     EXPECT_EQ(petitionManager.getCurrentPetition()->getId(), 1);
 }
 
 TEST(PetitionManagerTest, AcceptMovesCurrentToUnderConstruction) {
-    PetitionManager petitionManager;
-    Petition* original = petitionManager.getCurrentPetition();
+    PetitionManager pm;
+    Petition* current = pm.getCurrentPetition();
+    ASSERT_NE(current, nullptr);
 
-    petitionManager.acceptPetition();
+    int id = current->getId();
 
-    const auto& underConstruction = petitionManager.getUnderConstructionPetitions();
-    ASSERT_EQ(underConstruction.size(), 1u);
-    EXPECT_EQ(underConstruction[0], original);
+    pm.acceptPetition();
+
+    const auto& uc = pm.getUnderConstructionPetitions();
+    ASSERT_EQ(uc.size(), 1u);
+
+    ASSERT_NE(uc[0], nullptr);
+    EXPECT_EQ(uc[0]->getId(), id);
 }
 
 TEST(PetitionManagerTest, AcceptGeneratesNewCurrentPetition) {
-    PetitionManager petitionManager;
-    Petition* first = petitionManager.getCurrentPetition();
+    PetitionManager pm;
+    int firstId = pm.getCurrentPetition()->getId();
 
-    petitionManager.acceptPetition();
+    pm.acceptPetition();
 
-    EXPECT_NE(petitionManager.getCurrentPetition(), nullptr);
-    EXPECT_NE(petitionManager.getCurrentPetition(), first);
+    ASSERT_NE(pm.getCurrentPetition(), nullptr);
+    EXPECT_NE(pm.getCurrentPetition()->getId(), firstId);
 }
 
 TEST(PetitionManagerTest, AcceptIncrementsPetitionId) {
