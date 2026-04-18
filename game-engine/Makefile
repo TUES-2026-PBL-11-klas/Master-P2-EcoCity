@@ -16,6 +16,13 @@ TEST_SRCS := tests/GameServiceTest.cpp \
 
 TEST_TARGET := run_tests
 
+# Integration test sources — each binary gets its own test file + shared main
+INTEGRATION_MONGO_SRCS  := tests/IntegrationMongoTest.cpp  tests/test_main.cpp
+INTEGRATION_SOCKET_SRCS := tests/IntegrationSocketTest.cpp tests/test_main.cpp
+
+INTEGRATION_MONGO_TARGET  := run_integration_mongo
+INTEGRATION_SOCKET_TARGET := run_integration_socket
+
 # Main sources
 SRCS := main.cpp \
         domain/Building.cpp \
@@ -102,12 +109,17 @@ OBJS       += $(BUILDING_SRCS:.cpp=$(OBJ_EXT))
 LIB_OBJS   := $(filter-out main$(OBJ_EXT),$(OBJS))
 TEST_OBJS  := $(TEST_SRCS:.cpp=$(OBJ_EXT))
 
+INTEGRATION_MONGO_OBJS  := $(INTEGRATION_MONGO_SRCS:.cpp=$(OBJ_EXT))
+INTEGRATION_SOCKET_OBJS := $(INTEGRATION_SOCKET_SRCS:.cpp=$(OBJ_EXT))
+
 # Targets
-.PHONY: all tests clean re
+.PHONY: all tests integration_tests clean re
 
 all: $(TARGET)
 
 tests: $(TEST_TARGET)
+
+integration_tests: $(INTEGRATION_MONGO_TARGET) $(INTEGRATION_SOCKET_TARGET)
 
 # Protobuf codegen
 $(PROTO_GEN_CC) $(PROTO_GEN_H): $(PROTO_FILE)
@@ -140,6 +152,21 @@ $(TEST_TARGET): $(PROTO_OBJ) $(LIB_OBJS) $(TEST_OBJS)
 	$(CXX) $(CXXFLAGS) -o $(TEST_TARGET) $(PROTO_OBJ) $(LIB_OBJS) $(TEST_OBJS) $(LDFLAGS) $(TEST_LIBS)
 endif
 
+# Link integration test binaries
+ifeq ($(OS),Windows_NT)
+$(INTEGRATION_MONGO_TARGET): $(PROTO_OBJ) $(LIB_OBJS) $(INTEGRATION_MONGO_OBJS)
+	$(CXX) $(CXXFLAGS) /Fe$(INTEGRATION_MONGO_TARGET).exe $(PROTO_OBJ) $(LIB_OBJS) $(INTEGRATION_MONGO_OBJS) /link $(LDFLAGS) $(TEST_LIBS)
+
+$(INTEGRATION_SOCKET_TARGET): $(PROTO_OBJ) $(LIB_OBJS) $(INTEGRATION_SOCKET_OBJS)
+	$(CXX) $(CXXFLAGS) /Fe$(INTEGRATION_SOCKET_TARGET).exe $(PROTO_OBJ) $(LIB_OBJS) $(INTEGRATION_SOCKET_OBJS) /link $(LDFLAGS) $(TEST_LIBS)
+else
+$(INTEGRATION_MONGO_TARGET): $(PROTO_OBJ) $(LIB_OBJS) $(INTEGRATION_MONGO_OBJS)
+	$(CXX) $(CXXFLAGS) -o $(INTEGRATION_MONGO_TARGET) $(PROTO_OBJ) $(LIB_OBJS) $(INTEGRATION_MONGO_OBJS) $(LDFLAGS) $(TEST_LIBS)
+
+$(INTEGRATION_SOCKET_TARGET): $(PROTO_OBJ) $(LIB_OBJS) $(INTEGRATION_SOCKET_OBJS)
+	$(CXX) $(CXXFLAGS) -o $(INTEGRATION_SOCKET_TARGET) $(PROTO_OBJ) $(LIB_OBJS) $(INTEGRATION_SOCKET_OBJS) $(LDFLAGS) $(TEST_LIBS)
+endif
+
 # Compile rules
 ifeq ($(OS),Windows_NT)
 %.obj: %.cpp
@@ -153,8 +180,11 @@ endif
 clean:
 	$(DEL) $(call FIXPATH,$(OBJS)) \
 	       $(call FIXPATH,$(TEST_OBJS)) \
+	       $(call FIXPATH,$(INTEGRATION_MONGO_OBJS)) \
+	       $(call FIXPATH,$(INTEGRATION_SOCKET_OBJS)) \
 	       $(call FIXPATH,$(PROTO_OBJ)) \
 	       $(TARGET) $(TEST_TARGET) \
+	       $(INTEGRATION_MONGO_TARGET) $(INTEGRATION_SOCKET_TARGET) \
 	       $(PROTO_GEN_CC) $(PROTO_GEN_H)
 ifeq ($(OS),Windows_NT)
 	-$(DEL) *.pdb *.ilk
