@@ -42,19 +42,22 @@ int ResourceManager::getIndexForResourceType(ResourceType type) const
 
 void ResourceManager::tick()
 {
-    for(Resource& resource : resources)
+    std::for_each(resources.begin(), resources.end(),
+    [](Resource& resource)
     {
         resource.changeCurrentValue();
-    }
+    });
 }
 
 void ResourceManager::applyEffect(const std::vector<ResourceEffect>& effects) {
-    for (const ResourceEffect& effect : effects) {
-        if (effect.type == ResourceType::RESOURCE_UNSPECIFIED) {
-            continue;
-        }
-        resources[getIndexForResourceType(effect.type)].changeDeltaPerTick(effect.deltaValue);
-    }
+    std::for_each(effects.begin(), effects.end(), [this](const ResourceEffect& effect)
+    {
+        if (effect.type == ResourceType::RESOURCE_UNSPECIFIED)
+            return;
+    
+        resources[getIndexForResourceType(effect.type)]
+            .changeDeltaPerTick(effect.deltaValue);
+    });
 }
 
 LLint ResourceManager::getResourceValue(ResourceType type) const {
