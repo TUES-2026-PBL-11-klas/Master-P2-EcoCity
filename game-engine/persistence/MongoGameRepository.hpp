@@ -37,7 +37,6 @@ struct SavedGame {
 
 class MongoGameRepository : public IGameRepository {
     private:
-        mongocxx::instance instance;
         mongocxx::client client;
         std::string databaseName;
 

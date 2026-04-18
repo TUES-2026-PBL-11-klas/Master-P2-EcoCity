@@ -11,6 +11,10 @@
 #include "network/SocketServer.hpp"
 #include "Logger.hpp"
 
+#include <mongocxx/instance.hpp>
+
+static mongocxx::instance mongoInstance{};
+
 // Restoring petitions under construction is the trickiest part because Building
 // counts down ticksToComplete internally.  We create a fresh building with
 // createBuilding() (which sets the *full* tick cost) and then call buildTick()
