@@ -1,6 +1,8 @@
 #include "GameService.hpp"
 #include "../Logger.hpp"
 #include "../Tracer.hpp"
+#include "../exceptions/InsufficientResourcesException.hpp"
+#include "../exceptions/PersistenceException.hpp"
 #include <iostream>
 
 namespace {
@@ -40,7 +42,12 @@ bool GameService::tick()
 {
     TRACE("GameService", "tick");
 
-    readPlayerInput();
+    try {
+        readPlayerInput();
+    } catch (const InsufficientResourcesException& e) {
+        LOG_WARN("GameService", "petition_rejected_insufficient_funds", e.what());
+        petitionManager->rejectPetition();  // treat unaffordable accept as a reject
+    }
 
     const std::vector<CompletedConstruction> completedConstructions = petitionManager->tick();
     for (const CompletedConstruction& construction : completedConstructions) {
@@ -100,6 +107,17 @@ void GameService::readPlayerInput()
         const auto& response = uiAction.petition_response();
         if (response.responded()) {
             if (response.accepted()) {
+                // Guard: verify the player can afford the building before accepting.
+                // Throws InsufficientResourcesException if funds are too low, so the
+                // game loop rejects the action cleanly rather than silently overdrafting.
+                const Petition* petition = petitionManager->getCurrentPetition();
+                if (petition != nullptr && petition->getBuilding() != nullptr) {
+                    LLint cost      = petition->getBuilding()->getBuildCost();
+                    LLint available = resourceManager->getResourceValue(ResourceType::MONEY);
+                    if (!resourceManager->canAfford(cost)) {
+                        throw InsufficientResourcesException(cost, available);
+                    }
+                }
                 petitionManager->acceptPetition();
                 // std::cout << "[Input] Petition accepted.\n";
                 LOG_INFO("GameService", "petition_accepted");
@@ -112,9 +130,12 @@ void GameService::readPlayerInput()
     }
 
     if (uiAction.save_game()) {
-        gameRepository->saveGame(gameId, *resourceManager, *petitionManager, *city);
-        // std::cout << "[Input] Game saved to MongoDB.\n";
-        LOG_INFO("GameService", "game_saved");
+        try {
+            gameRepository->saveGame(gameId, *resourceManager, *petitionManager, *city);
+            LOG_INFO("GameService", "game_saved");
+        } catch (const PersistenceException& e) {
+            LOG_ERROR("GameService", "save_failed", e.what());
+        }
     }
 }
 

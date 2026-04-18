@@ -7,6 +7,7 @@
 #include "../domain/City.hpp"
 #include "../network/SocketServer.hpp"
 #include "../persistence/MongoGameRepository.hpp"
+#include "../exceptions/InsufficientResourcesException.hpp"
 
 #include <fstream>
 

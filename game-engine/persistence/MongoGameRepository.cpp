@@ -23,6 +23,7 @@
 
 #include "../Logger.hpp"
 #include "../Tracer.hpp"
+#include "../exceptions/PersistenceException.hpp"
 
 using bsoncxx::builder::basic::document;
 using bsoncxx::builder::basic::kvp;
@@ -68,7 +69,9 @@ ResourceType resourceTypeFromString(const std::string& s)
     if (s == "MONEY")      return MONEY;
     if (s == "POPULATION") return POPULATION;
     if (s == "CO2")        return CO2;
-    return RESOURCE_UNSPECIFIED;
+    // An unrecognised string means the DB contains a value this code does not
+    // know about -- that is a data-integrity problem worth surfacing immediately.
+    throw std::invalid_argument("Unknown ResourceType string: \"" + s + "\"");
 }
 
 BuildingType buildingTypeFromString(const std::string& s)
@@ -85,7 +88,7 @@ BuildingType buildingTypeFromString(const std::string& s)
     if (s == "INDUSTRIAL_ZONE")              return INDUSTRIAL_ZONE;
     if (s == "AIRPORT_EXPANSION")            return AIRPORT_EXPANSION;
     if (s == "ROAD_IMPROVEMENT")             return ROAD_IMPROVEMENT;
-    return BUILDING_UNSPECIFIED;
+    throw std::invalid_argument("Unknown BuildingType string: \"" + s + "\"");
 }
 
 double getDeltaForResource(const std::vector<ResourceEffect>& effects, ResourceType type)
@@ -177,6 +180,7 @@ void MongoGameRepository::saveGame(
 {
     TRACE("MongoGameRepository", "saveGame");
 
+    try {
     mongocxx::database database = client[databaseName];
 
     mongocxx::options::replace replaceOptions;
@@ -230,12 +234,18 @@ void MongoGameRepository::saveGame(
     }
 
     LOG_INFO("MongoGameRepository", "game_saved", "game_id=" + gameId);
+    } catch (const std::exception& e) {
+        // Wrap any MongoDB or BSON exception in PersistenceException so callers
+        // do not need to know about mongocxx internals.
+        throw PersistenceException(PersistenceException::Operation::SAVE, e.what());
+    }
 }
 
 SavedGame MongoGameRepository::loadGame(const std::string& gameId)
 {
     TRACE("MongoGameRepository", "loadGame");
 
+    try {
     SavedGame result{};
     result.found = false;
 
@@ -298,4 +308,7 @@ SavedGame MongoGameRepository::loadGame(const std::string& gameId)
     LOG_INFO("MongoGameRepository", "game_loaded", "game_id=" + gameId);
 
     return result;
+    } catch (const std::exception& e) {
+        throw PersistenceException(PersistenceException::Operation::LOAD, e.what());
+    }
 }
