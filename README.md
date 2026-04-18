@@ -23,7 +23,7 @@ EcoCity е игра от тип city builder, направена за учили
 
 ## Структура
 
-
+```
 ├── game_api/
 │   └── v1/
 │       └── api_types.proto          # Дефиниция на protobuf, който отговаря за
@@ -65,7 +65,7 @@ EcoCity е игра от тип city builder, направена за учили
 │   └── build.sh                     # Shell script, който построява backend и UI
 │
 └── eco_city_tmp_ui.py               # Временен UI
-
+```
 
 ## Tests
 Backend tests live in `game-engine/tests`.
