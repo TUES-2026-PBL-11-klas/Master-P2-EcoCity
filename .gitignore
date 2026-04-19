@@ -46,3 +46,21 @@ game-engine/metrics/*
 
 .vscode/*
 .venv/*
+
+# CMake build output
+build/
+
+# CMake generated files that might appear at root level
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+
+# Generated protobuf files (regenerated at build time)
+*.pb.cc
+*.pb.h
+
+# MSVC artifacts
+*.obj
+*.pdb
+*.ilk
+*.exe
