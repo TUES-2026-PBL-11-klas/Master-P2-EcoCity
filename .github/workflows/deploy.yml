@@ -14,7 +14,7 @@ jobs:
           - service: backend
             context: .
           - service: worker
-            context: ./deployment/DBImage
+            context: .
 
     steps:
       - name: Checkout Code
