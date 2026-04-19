@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <algorithm>
 
 // Enum order:  WATER=0, ENERGY=1, MONEY=2, POPULATION=3, CO2=4
 // Array must follow the same order:
@@ -54,7 +55,7 @@ void ResourceManager::applyEffect(const std::vector<ResourceEffect>& effects) {
     {
         if (effect.type == ResourceType::RESOURCE_UNSPECIFIED)
             return;
-    
+
         resources[getIndexForResourceType(effect.type)]
             .changeDeltaPerTick(effect.deltaValue);
     });

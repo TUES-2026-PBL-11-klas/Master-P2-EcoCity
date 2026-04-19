@@ -15,20 +15,20 @@ std::vector<CompletedConstruction> PetitionManager::tick()
 
     std::vector<Petition*> petitionsToRemove;
     std::vector<CompletedConstruction> completedConstructions;
-    
+
     std::for_each(underConstructionPetitions.begin(),
                   underConstructionPetitions.end(),
                   [&](Petition* petition)
     {
         auto effects = petition->buildTick();
-    
+
         if (!effects.empty())
         {
             completedConstructions.push_back(
                 { petition->getBuilding()->getType(), std::move(effects) });
-    
+
             petitionsToRemove.push_back(petition);
-    
+
             LOG_INFO("PetitionManager", "petition_completed",
                      "id=" + std::to_string(petition->getId()));
         }
@@ -45,7 +45,7 @@ std::vector<CompletedConstruction> PetitionManager::tick()
     });
 
     underConstructionPetitions.erase(it, underConstructionPetitions.end());
-    
+
     for (Petition* p : petitionsToRemove)
     {
         delete p;
@@ -65,11 +65,11 @@ void PetitionManager::acceptPetition()
 
 void PetitionManager::rejectPetition()
 {
-    withCurrentPetition([&](Petition* p)
+    if (currentPetition != nullptr)
     {
-        delete p;
+        delete currentPetition;
         currentPetition = generatePetition();
-    });
+    }
 }
 
 Petition* PetitionManager::getCurrentPetition() const
@@ -104,7 +104,7 @@ Petition* PetitionManager::generatePetition()
         std::uniform_int_distribution<std::size_t> dist(0, buildingPool.size() - 1);
         return buildingPool[dist(randomEngine)];
     };
-    
+
     const BuildingType buildingType = pickRandomBuilding();
 
     LOG_DEBUG("PetitionManager", "petition_generated", "id=" + std::to_string(nextPetitionId));
