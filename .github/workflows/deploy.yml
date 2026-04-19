@@ -11,27 +11,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - service: frontend
-            context: ./deployment/frontend
-            test_command: 'echo "FE"'
           - service: backend
-            context: ./deployment/backend
-            test_command: 'echo "BE"'
+            context: .
           - service: worker
-            context: ./deployment/worker
-            test_command: 'echo "DB"'
+            context: ./deployment/DBImage
 
     steps:
-      - name: Secret Check
-        run: |
-          echo "Testing OAUTH_CLIENT_ID length..."
-          if [ -z "${{ secrets.OAUTH_CLIENT_ID }}" ]; then
-            echo "RESULT: Secret is TRULY empty"
-            exit 1
-          else
-            echo "RESULT: Secret is found (length is NOT zero)"
-          fi
-
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -46,9 +31,57 @@ jobs:
         run: |
           docker build -t ${{ secrets.SERVER_IP }}:5000/${{ matrix.service }}:${{ github.sha }} ${{ matrix.context }}
 
-      - name: Run Service-Specific Tests
+      - name: Run DB Integration Tests
+        if: matrix.service == 'worker'
+        working-directory: deployment/DBImage
         run: |
-          docker run --rm ${{ secrets.SERVER_IP }}:5000/${{ matrix.service }}:${{ github.sha }} ${{ matrix.test_command }}
+          docker compose up -d
+
+          echo "Waiting for eco-city-mongo to be healthy..."
+          for i in $(seq 1 12); do
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' eco-city-mongo 2>/dev/null || echo "missing")
+            echo "  attempt $i: $STATUS"
+            [ "$STATUS" = "healthy" ] && break
+            [ $i -eq 12 ] && echo "Container never became healthy" && docker compose logs && exit 1
+            sleep 5
+          done
+
+          docker exec eco-city-mongo sh -c \
+            "mongorestore --drop --db Eco_city_game /backup/Eco_city_game"
+
+          docker exec eco-city-mongo mongosh --quiet Eco_city_game --eval "
+            const collections = ['games', 'resources', 'current_petition', 'active_petitions', 'petition_counts'];
+            let failed = false;
+
+            const existing = db.getCollectionNames();
+            print('Found collections: ' + JSON.stringify(existing));
+
+            for (const col of collections) {
+              if (!existing.includes(col)) {
+                print('FAIL: missing collection: ' + col);
+                failed = true;
+                continue;
+              }
+              const count = db[col].countDocuments();
+              print(col + ': ' + count + ' document(s)');
+              if (count === 0) { print('WARN: ' + col + ' is empty'); }
+            }
+
+            print('');
+            print('=== games ===');            printjson(db.games.find().toArray());
+            print('=== resources ===');        printjson(db.resources.find().toArray());
+            print('=== current_petition ==='); printjson(db.current_petition.find().toArray());
+            print('=== active_petitions ==='); printjson(db.active_petitions.find().toArray());
+            print('=== petition_counts ===');  printjson(db.petition_counts.find().toArray());
+
+            if (failed) { print('One or more collections missing — failing.'); quit(1); }
+            print('All collections present.');
+          "
+
+      - name: Tear Down DB Stack
+        if: matrix.service == 'worker' && always()
+        working-directory: deployment/DBImage
+        run: docker compose down -v
 
       - name: Push to Arch Server Registry
         run: |
@@ -73,6 +106,5 @@ jobs:
 
       - name: Update K8s Images
         run: |
-          kubectl set image deployment/frontend frontend=${{ secrets.SERVER_IP }}:5000/frontend:${{ github.sha }}
           kubectl set image deployment/backend backend=${{ secrets.SERVER_IP }}:5000/backend:${{ github.sha }}
-          kubectl set image deployment/worker worker=${{ secrets.SERVER_IP }}:5000/worker:${{ github.sha }}
+          kubectl set image deployment/worker  worker=${{ secrets.SERVER_IP }}:5000/worker:${{ github.sha }}
