@@ -22,6 +22,16 @@ jobs:
             test_command: 'echo "DB"'
 
     steps:
+      - name: Secret Check
+        run: |
+          echo "Testing OAUTH_CLIENT_ID length..."
+          if [ -z "${{ secrets.OAUTH_CLIENT_ID }}" ]; then
+            echo "RESULT: Secret is TRULY empty"
+            exit 1
+          else
+            echo "RESULT: Secret is found (length is NOT zero)"
+          fi
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
