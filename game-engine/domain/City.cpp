@@ -1,5 +1,6 @@
 #include "City.hpp"
 
+//Single Responsibility Principle - only tracks what types and the number of buildings built
 City::City()
 {
     buildings[BUILDING_UNSPECIFIED] = 0;

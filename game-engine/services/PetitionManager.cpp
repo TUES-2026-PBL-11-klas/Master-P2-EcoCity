@@ -2,6 +2,8 @@
 #include "../Logger.hpp"
 #include "../Tracer.hpp"
 
+//Single Responsibility Principle - manages only the petition logic
+
 PetitionManager::PetitionManager()
 : currentPetition(nullptr), randomEngine(std::random_device{}()), nextPetitionId(1)
 {

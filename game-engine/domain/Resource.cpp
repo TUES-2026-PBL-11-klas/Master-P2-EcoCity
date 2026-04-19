@@ -1,5 +1,6 @@
 #include "Resource.hpp"
 
+//Single Responsibility Principle - only holds and updates information about a single type of resource
 Resource::Resource(ResourceType type, LLint amount, LLint deltaPerTick)
 : type(type), currentValue(amount), deltaPerTick(deltaPerTick) {}
 

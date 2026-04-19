@@ -1,5 +1,6 @@
 #include "Petition.hpp"
 
+//Single Responsibility Principle - only holds a Building and its ID, and provides a method to tick the building
 Petition::Petition(int id, Building* building)
 {
     this->id = id;
