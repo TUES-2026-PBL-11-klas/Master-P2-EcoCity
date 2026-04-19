@@ -21,9 +21,11 @@
 #include "../domain/ResourceEffect.hpp"
 #include "../domain/ResourceType.hpp"
 
-#include "../Logger.hpp"
-#include "../Tracer.hpp"
+#include "../observability/Logger.hpp"
+#include "../observability/Tracer.hpp"
 #include "../exceptions/PersistenceException.hpp"
+
+//Single Responsibility Pronciple - Only responsible for saving and loading the game state to/from MongoDB.  It translates between the in-memory C++ objects and the BSON documents stored in MongoDB, but does not contain any game logic itself.
 
 using bsoncxx::builder::basic::document;
 using bsoncxx::builder::basic::kvp;

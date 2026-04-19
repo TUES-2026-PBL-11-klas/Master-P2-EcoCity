@@ -6,6 +6,11 @@
 #include "ResourceEffect.hpp"
 #include "BuildingType.hpp"
 
+/*Open-Closed Principle - to add something to the building class you make a child class that 
+inherits from Building, and implement the Effects() method.  
+This way you don't have to change any of the existing code in Building or its users, and 
+you can add as many new building types as you want without touching existing code.
+*/
 typedef long long int LLint;
 
 class Building {

@@ -1,5 +1,7 @@
 #include "BuildingFactory.hpp"
 
+//Open-CLosed Principle - to add a new building you merely have to add a case, not change the code
+
 Building* createBuilding(BuildingType type)
 {
     switch (type) {

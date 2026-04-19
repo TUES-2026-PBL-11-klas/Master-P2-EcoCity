@@ -11,7 +11,7 @@
 #include "domain/buildings/BuildingFactory.hpp"
 #include "persistence/MongoGameRepository.hpp"
 #include "network/SocketServer.hpp"
-#include "Logger.hpp"
+#include "observability/Logger.hpp"
 #include "exceptions/InsufficientResourcesException.hpp"
 #include "exceptions/PersistenceException.hpp"
 

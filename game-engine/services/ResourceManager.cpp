@@ -5,6 +5,8 @@
 #include <string>
 #include <algorithm>
 
+//Single Responsibility Principle - manages solely the logic for the resources
+
 // Enum order:  WATER=0, ENERGY=1, MONEY=2, POPULATION=3, CO2=4
 // Array must follow the same order:
 ResourceManager::ResourceManager()

@@ -12,6 +12,7 @@
 
 #include "../network/ISocketServer.hpp"
 #include "../persistence/IGameRepository.hpp"
+#include "../observability/SystemMetrics.hpp"
 
 
 #include <fstream>
@@ -30,6 +31,8 @@ class GameService : public IGameService {
         std::string gameId;
 
         std::ofstream metricsFile_;
+        std::ofstream systemMetricsFile_;
+        ProcStat lastProcStat_ = readProcStat();
         long long tickCount_ = 0;
         long long int nextPopulationGoal = 1200000;
 

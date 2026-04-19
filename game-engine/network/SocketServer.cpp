@@ -3,7 +3,7 @@
 #include <cstring>
 #include <stdexcept>
 
-#include "../Logger.hpp"
+#include "../observability/Logger.hpp"
 
 #ifdef _WIN32
     #include <winsock2.h>
@@ -18,6 +18,8 @@
     #define SOCKET_ERROR -1
     #define closesocket close
 #endif
+
+//Single Responsibility Principle - handles only the communication between the game_engine and the UI.
 
 SocketServer::SocketServer(int port)
     : port(port), running(true), serverFd(INVALID_SOCKET), clientFd(INVALID_SOCKET)
