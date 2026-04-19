@@ -40,6 +40,7 @@ jobs:
         with:
           oauth-client-id: ${{ secrets.OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.OAUTH_SECRED }}
+          tags: tag:ci
 
       - name: Build Image
         run: |
@@ -62,6 +63,7 @@ jobs:
         with:
           oauth-client-id: ${{ secrets.OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.OAUTH_SECRED }}
+          tags: tag:ci
 
       - name: Set K8s Context
         uses: azure/k8s-set-context@v3
