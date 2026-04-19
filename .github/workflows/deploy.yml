@@ -30,7 +30,6 @@ jobs:
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_ID }}
           oauth-client-secret: ${{ secrets.TS_OAUTH_SECRET }}
-          tags: tag:ci
 
       - name: Build Image
         run: |
