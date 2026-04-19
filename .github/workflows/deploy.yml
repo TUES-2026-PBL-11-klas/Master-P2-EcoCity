@@ -1,0 +1,65 @@
+name: Build and Remote Deploy
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-test-push:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: frontend
+            context: ./frontend
+            test_command: 'echo "UI test command placeholder'
+          - service: backend
+            context: ./backend
+            test_command: 'echo "BE test command placeholder'
+          - service: database
+            context: ./db
+            test_command: 'echo "DB test command placeholder'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+
+      - name: Build Image
+        run: |
+          docker build -t ${{ secrets.SERVER_IP }}:5000/${{ matrix.service }}:${{ github.sha }} ${{ matrix.context }}
+
+      - name: Run Service-Specific Tests
+        run: |
+          # The container runs the specific command defined in the matrix above
+          docker run --rm ${{ secrets.SERVER_IP }}:5000/${{ matrix.service }}:${{ github.sha }} ${{ matrix.test_command }}
+
+      - name: Push to Arch Server Registry
+        run: |
+          docker push ${{ secrets.SERVER_IP }}:5000/${{ matrix.service }}:${{ github.sha }}
+
+  deploy:
+    needs: build-test-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+
+      - name: Set K8s Context
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+
+      - name: Rollout New Images
+        run: |
+          # Update images using the SHA from the build step
+          kubectl set image deployment/frontend frontend=${{ secrets.SERVER_IP }}:5000/frontend:${{ github.sha }}
+          kubectl set image deployment/backend backend=${{ secrets.SERVER_IP }}:5000/backend:${{ github.sha }}
+          kubectl set image deployment/database database=${{ secrets.SERVER_IP }}:5000/database:${{ github.sha }}
