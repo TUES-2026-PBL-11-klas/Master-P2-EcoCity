@@ -80,7 +80,7 @@ jobs:
 
       - name: Tear Down DB Stack
         if: matrix.service == 'worker' && always()
-        working-directory: deployment/DBImage
+        working-directory: .
         run: docker compose down -v
 
       - name: Push to Arch Server Registry
