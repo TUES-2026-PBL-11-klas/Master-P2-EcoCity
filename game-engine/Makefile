@@ -51,7 +51,8 @@ BUILDING_SRCS := domain/buildings/AirportExpansion.cpp \
 
 # Platform detection
 ifeq ($(OS),Windows_NT)
-    # Windows (MSVC + vcpkg)
+	SHELL      := cmd.exe
+    # Windows (MSVC + vcpkg x64-windows)
     CXX        := cl
     TARGET     := $(TARGET).exe
     TEST_TARGET := $(TEST_TARGET).exe
@@ -59,7 +60,7 @@ ifeq ($(OS),Windows_NT)
     DEL        := del /q
     FIXPATH     = $(subst /,\\,$1)
 
-    PROTOC := C:/vcpkg/installed/x64-mingw-dynamic/tools/protobuf/protoc.exe
+    PROTOC := C:/vcpkg/installed/x64-windows/tools/protobuf/protoc.exe
 
     VCPKG_ROOT := C:/vcpkg/installed/x64-windows
     VCPKG_LIB  := $(VCPKG_ROOT)/lib
@@ -70,9 +71,12 @@ ifeq ($(OS),Windows_NT)
                 /I$(VCPKG_ROOT)/include/bsoncxx/v_noabi
 
     LDFLAGS := /LIBPATH:$(VCPKG_LIB) /MACHINE:X64
-    LIBS    := libprotobuf.lib abseil_dll.lib \
-               mongocxx-v_noabi-rhi-md.lib \
-               bsoncxx-v_noabi-rhi-md.lib
+	LIBS := libprotobuf.lib \
+        abseil_dll.lib \
+        mongocxx-v_noabi-rhi-md.lib \
+        bsoncxx-v_noabi-rhi-md.lib \
+        mongoc2.dll.lib \
+        bson2.dll.lib
 
     # test_main.cpp provides main(), so only gtest.lib is needed here
     TEST_LIBS := $(LIBS) gtest.lib

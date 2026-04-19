@@ -5,9 +5,15 @@
 #include "ResourceManager.hpp"
 #include "PetitionManager.hpp"
 #include "../domain/City.hpp"
+
+#include "../network/SocketServer.hpp"
+#include "../persistence/MongoGameRepository.hpp"
+#include "../exceptions/InsufficientResourcesException.hpp"
+
 #include "../network/ISocketServer.hpp"
 #include "../persistence/IGameRepository.hpp"
 #include "../observability/SystemMetrics.hpp"
+
 
 #include <fstream>
 

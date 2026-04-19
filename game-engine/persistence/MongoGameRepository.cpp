@@ -23,6 +23,7 @@
 
 #include "../observability/Logger.hpp"
 #include "../observability/Tracer.hpp"
+#include "../exceptions/PersistenceException.hpp"
 
 using bsoncxx::builder::basic::document;
 using bsoncxx::builder::basic::kvp;
@@ -31,12 +32,12 @@ namespace {
 std::string toString(ResourceType type)
 {
     switch (type) {
-    case RESOURCE_UNSPECIFIED: return "RESOURCE_UNSPECIFIED";
-    case WATER:                return "WATER";
-    case ENERGY:               return "ENERGY";
-    case MONEY:                return "MONEY";
-    case POPULATION:           return "POPULATION";
-    case CO2:                  return "CO2";
+    case RESOURCE_UNSPECIFIED: return "RESOURCE_TYPE_UNSPECIFIED";
+    case WATER:                return "RESOURCE_TYPE_WATER";
+    case ENERGY:               return "RESOURCE_TYPE_ENERGY";
+    case MONEY:                return "RESOURCE_TYPE_MONEY";
+    case POPULATION:           return "RESOURCE_TYPE_POPULATION";
+    case CO2:                  return "RESOURCE_TYPE_CO2";
     default:                   return "UNKNOWN";
     }
 }
@@ -44,48 +45,51 @@ std::string toString(ResourceType type)
 std::string toString(BuildingType type)
 {
     switch (type) {
-    case BUILDING_UNSPECIFIED:          return "BUILDING_UNSPECIFIED";
-    case POWER_PLANT:                   return "POWER_PLANT";
-    case WATER_TREATMENT_PLANT:         return "WATER_TREATMENT_PLANT";
-    case SOLAR_PANEL_FARM:              return "SOLAR_PANEL_FARM";
-    case SOLAR_PANEL_ROOFTOPS:          return "SOLAR_PANEL_ROOFTOPS";
-    case PUBLIC_TRANSPORT_UPGRADE:      return "PUBLIC_TRANSPORT_UPGRADE";
-    case WIND_TURBINE_FARM:             return "WIND_TURBINE_FARM";
-    case HYDROELECTRIC_PLANT:           return "HYDROELECTRIC_PLANT";
-    case URBAN_GREENING:                return "URBAN_GREENING";
-    case WATER_SAVING_INFRASTRUCTURE:   return "WATER_SAVING_INFRASTRUCTURE";
-    case INDUSTRIAL_ZONE:               return "INDUSTRIAL_ZONE";
-    case AIRPORT_EXPANSION:             return "AIRPORT_EXPANSION";
-    case ROAD_IMPROVEMENT:              return "ROAD_IMPROVEMENT";
+    case BUILDING_UNSPECIFIED:          return "BUILDING_TYPE_UNSPECIFIED";
+    case POWER_PLANT:                   return "BUILDING_TYPE_POWER_PLANT";
+    case WATER_TREATMENT_PLANT:         return "BUILDING_TYPE_WATER_TREATMENT_PLANT";
+    case SOLAR_PANEL_FARM:              return "BUILDING_TYPE_SOLAR_PANEL_FARM";
+    case SOLAR_PANEL_ROOFTOPS:          return "BUILDING_TYPE_SOLAR_PANEL_ROOFTOPS";
+    case PUBLIC_TRANSPORT_UPGRADE:      return "BUILDING_TYPE_PUBLIC_TRANSPORT_UPGRADE";
+    case WIND_TURBINE_FARM:             return "BUILDING_TYPE_WIND_TURBINE_FARM";
+    case HYDROELECTRIC_PLANT:           return "BUILDING_TYPE_HYDROELECTRIC_PLANT";
+    case URBAN_GREENING:                return "BUILDING_TYPE_URBAN_GREENING";
+    case WATER_SAVING_INFRASTRUCTURE:   return "BUILDING_TYPE_WATER_SAVING_INFRASTRUCTURE";
+    case INDUSTRIAL_ZONE:               return "BUILDING_TYPE_INDUSTRIAL_ZONE";
+    case AIRPORT_EXPANSION:             return "BUILDING_TYPE_AIRPORT_EXPANSION";
+    case ROAD_IMPROVEMENT:              return "BUILDING_TYPE_ROAD_IMPROVEMENT";
     default:                            return "UNKNOWN";
     }
 }
 
 ResourceType resourceTypeFromString(const std::string& s)
 {
-    if (s == "WATER")      return WATER;
-    if (s == "ENERGY")     return ENERGY;
-    if (s == "MONEY")      return MONEY;
-    if (s == "POPULATION") return POPULATION;
-    if (s == "CO2")        return CO2;
-    return RESOURCE_UNSPECIFIED;
+    if (s == "RESOURCE_TYPE_WATER"       || s == "WATER")       return WATER;
+    if (s == "RESOURCE_TYPE_ENERGY"      || s == "ENERGY")      return ENERGY;
+    if (s == "RESOURCE_TYPE_MONEY"       || s == "MONEY")       return MONEY;
+    if (s == "RESOURCE_TYPE_POPULATION"  || s == "POPULATION")  return POPULATION;
+    if (s == "RESOURCE_TYPE_CO2"         || s == "CO2")         return CO2;
+    // An unrecognised string means the DB contains a value this code does not
+    // know about -- that is a data-integrity problem worth surfacing immediately.
+    throw std::invalid_argument("Unknown ResourceType string: \"" + s + "\"");
 }
 
 BuildingType buildingTypeFromString(const std::string& s)
 {
-    if (s == "POWER_PLANT")                  return POWER_PLANT;
-    if (s == "WATER_TREATMENT_PLANT")        return WATER_TREATMENT_PLANT;
-    if (s == "SOLAR_PANEL_FARM")             return SOLAR_PANEL_FARM;
-    if (s == "SOLAR_PANEL_ROOFTOPS")         return SOLAR_PANEL_ROOFTOPS;
-    if (s == "PUBLIC_TRANSPORT_UPGRADE")     return PUBLIC_TRANSPORT_UPGRADE;
-    if (s == "WIND_TURBINE_FARM")            return WIND_TURBINE_FARM;
-    if (s == "HYDROELECTRIC_PLANT")          return HYDROELECTRIC_PLANT;
-    if (s == "URBAN_GREENING")               return URBAN_GREENING;
-    if (s == "WATER_SAVING_INFRASTRUCTURE")  return WATER_SAVING_INFRASTRUCTURE;
-    if (s == "INDUSTRIAL_ZONE")              return INDUSTRIAL_ZONE;
-    if (s == "AIRPORT_EXPANSION")            return AIRPORT_EXPANSION;
-    if (s == "ROAD_IMPROVEMENT")             return ROAD_IMPROVEMENT;
-    return BUILDING_UNSPECIFIED;
+    if (s == "BUILDING_TYPE_UNSPECIFIED"           || s == "BUILDING_UNSPECIFIED")          return BUILDING_UNSPECIFIED;
+    if (s == "BUILDING_TYPE_POWER_PLANT"           || s == "POWER_PLANT")                   return POWER_PLANT;
+    if (s == "BUILDING_TYPE_WATER_TREATMENT_PLANT" || s == "WATER_TREATMENT_PLANT")         return WATER_TREATMENT_PLANT;
+    if (s == "BUILDING_TYPE_SOLAR_PANEL_FARM"      || s == "SOLAR_PANEL_FARM")              return SOLAR_PANEL_FARM;
+    if (s == "BUILDING_TYPE_SOLAR_PANEL_ROOFTOPS"  || s == "SOLAR_PANEL_ROOFTOPS")          return SOLAR_PANEL_ROOFTOPS;
+    if (s == "BUILDING_TYPE_PUBLIC_TRANSPORT_UPGRADE" || s == "PUBLIC_TRANSPORT_UPGRADE")   return PUBLIC_TRANSPORT_UPGRADE;
+    if (s == "BUILDING_TYPE_WIND_TURBINE_FARM"     || s == "WIND_TURBINE_FARM")             return WIND_TURBINE_FARM;
+    if (s == "BUILDING_TYPE_HYDROELECTRIC_PLANT"   || s == "HYDROELECTRIC_PLANT")           return HYDROELECTRIC_PLANT;
+    if (s == "BUILDING_TYPE_URBAN_GREENING"        || s == "URBAN_GREENING")                return URBAN_GREENING;
+    if (s == "BUILDING_TYPE_WATER_SAVING_INFRASTRUCTURE" || s == "WATER_SAVING_INFRASTRUCTURE") return WATER_SAVING_INFRASTRUCTURE;
+    if (s == "BUILDING_TYPE_INDUSTRIAL_ZONE"       || s == "INDUSTRIAL_ZONE")               return INDUSTRIAL_ZONE;
+    if (s == "BUILDING_TYPE_AIRPORT_EXPANSION"     || s == "AIRPORT_EXPANSION")             return AIRPORT_EXPANSION;
+    if (s == "BUILDING_TYPE_ROAD_IMPROVEMENT"      || s == "ROAD_IMPROVEMENT")              return ROAD_IMPROVEMENT;
+    throw std::invalid_argument("Unknown BuildingType string: \"" + s + "\"");
 }
 
 double getDeltaForResource(const std::vector<ResourceEffect>& effects, ResourceType type)
@@ -177,6 +181,7 @@ void MongoGameRepository::saveGame(
 {
     TRACE("MongoGameRepository", "saveGame");
 
+    try {
     mongocxx::database database = client[databaseName];
 
     mongocxx::options::replace replaceOptions;
@@ -230,12 +235,18 @@ void MongoGameRepository::saveGame(
     }
 
     LOG_INFO("MongoGameRepository", "game_saved", "game_id=" + gameId);
+    } catch (const std::exception& e) {
+        // Wrap any MongoDB or BSON exception in PersistenceException so callers
+        // do not need to know about mongocxx internals.
+        throw PersistenceException(PersistenceException::Operation::SAVE, e.what());
+    }
 }
 
 SavedGame MongoGameRepository::loadGame(const std::string& gameId)
 {
     TRACE("MongoGameRepository", "loadGame");
 
+    try {
     SavedGame result{};
     result.found = false;
 
@@ -298,4 +309,7 @@ SavedGame MongoGameRepository::loadGame(const std::string& gameId)
     LOG_INFO("MongoGameRepository", "game_loaded", "game_id=" + gameId);
 
     return result;
+    } catch (const std::exception& e) {
+        throw PersistenceException(PersistenceException::Operation::LOAD, e.what());
+    }
 }

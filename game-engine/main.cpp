@@ -1,6 +1,8 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <memory>
+#include <stdexcept>
 
 #include "services/GameService.hpp"
 #include "services/ResourceManager.hpp"
@@ -10,6 +12,8 @@
 #include "persistence/MongoGameRepository.hpp"
 #include "network/SocketServer.hpp"
 #include "observability/Logger.hpp"
+#include "exceptions/InsufficientResourcesException.hpp"
+#include "exceptions/PersistenceException.hpp"
 
 #include <mongocxx/instance.hpp>
 
@@ -68,10 +72,12 @@ static void restoreGame(
         const auto& pd = save.currentPetition;
         Building* building = createBuilding(pd.buildingType);
 
-        if (building != nullptr) {
-            building->setTicksToComplete(pd.ticksRemaining);
-            building->setBuildCost(pd.cost);
+        if (building == nullptr) {
+            throw std::invalid_argument("Invalid building type in saved current petition");
         }
+
+        building->setTicksToComplete(pd.ticksRemaining);
+        building->setBuildCost(pd.cost);
 
         Petition* petition = new Petition(pd.id, building);
         petitionManager.restoreCurrentPetition(petition);
@@ -90,31 +96,71 @@ int main() {
     PetitionManager petitionManager;
     City city;
 
+    // SocketServer constructor blocks until the socket is bound and listening.
+    // It throws std::runtime_error if the port is unavailable.
     SocketServer socketServer(uiPort);
 
     MongoGameRepository gameRepository(mongoConnectionString, databaseName);
 
-    // Try to load an existing save
-    SavedGame save = gameRepository.loadGame(gameId);
+    // Try to load an existing save.
+    // PersistenceException is thrown if MongoDB is unreachable or the data is corrupt.
+    SavedGame save;
+    try {
+        save = gameRepository.loadGame(gameId);
+    } catch (const PersistenceException& e) {
+        LOG_ERROR("main", "loadGame", std::string("Could not load save: ") + e.what());
+        return 1;
+    }
+
     if (save.found)
     {
         LOG_INFO("main", "loadGame", "Saved game found, resuming.");
-        restoreGame(save, resourceManager, petitionManager, city);
+        try{
+            restoreGame(save, resourceManager, petitionManager, city);
+        } catch (const std::exception& e) {
+            LOG_ERROR("main", "restoreGame", std::string("Failed to restore game state: ") + e.what());
+            return 1;
+        }
     }
     else
     {
         LOG_INFO("main", "loadGame", "No saved game found, starting new game.");
-        gameRepository.saveGame(gameId, resourceManager, petitionManager, city);
-        LOG_INFO("main", "saveGame", "Saved initial game state to MongoDB with game_id=" + gameId);
+        try {
+            gameRepository.saveGame(gameId, resourceManager, petitionManager, city);
+            LOG_INFO("main", "saveGame", "Saved initial game state to MongoDB with game_id=" + gameId);
+        } catch (const PersistenceException& e) {
+            LOG_ERROR("main", "saveGame", std::string("Could not write initial save: ") + e.what());
+            return 1;
+        }
     }
 
-    GameService gameService(&resourceManager, &petitionManager, &city, &socketServer, &gameRepository, gameId);
+    std::unique_ptr<GameService> gameService;
+    try {
+        gameService = std::make_unique<GameService>(
+            &resourceManager,
+            &petitionManager,
+            &city,
+            &socketServer,
+            &gameRepository,
+            gameId
+        );
+    } catch (const std::exception& e) {
+        LOG_ERROR("main", "gameService", std::string("Could not initialize game service: ") + e.what());
+        return 1;
+    }
 
     bool endGame = false;
-    while (!endGame)
-    {
-        endGame = gameService.tick();
-        std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    try {
+        while (!endGame)
+        {
+            endGame = gameService->tick();
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        }
+    } catch (const std::exception& e) {
+        // Last-resort catch: any unhandled exception from the game loop is
+        // logged here before the process exits cleanly.
+        LOG_ERROR("main", "game_loop", std::string("Fatal error: ") + e.what());
+        return 1;
     }
 
     return 0;

@@ -1,6 +1,9 @@
 #include "ResourceManager.hpp"
 
 #include <iostream>
+#include <stdexcept>
+#include <string>
+#include <algorithm>
 
 // Enum order:  WATER=0, ENERGY=1, MONEY=2, POPULATION=3, CO2=4
 // Array must follow the same order:
@@ -24,24 +27,38 @@ ResourceManager::ResourceManager()
 
 int ResourceManager::getIndexForResourceType(ResourceType type) const
 {
-    return static_cast<int>(type) - 1; // enum starts at 1 for WATER, but WATER is at index 0 in arr
+    int idx = static_cast<int>(type) - 1; // enum starts at 1 for WATER, but WATER is at index 0 in arr
+
+    // Guard: RESOURCE_UNSPECIFIED (0) gives idx == -1, and any future out-of-range
+    // enum value would silently corrupt the array without this check.
+    if (idx < 0 || idx >= static_cast<int>(resources.size())) {
+        throw std::out_of_range(
+            "Invalid ResourceType value: " + std::to_string(static_cast<int>(type)) +
+            " (mapped index " + std::to_string(idx) + " is out of range)"
+        );
+    }
+
+    return idx;
 }
 
 void ResourceManager::tick()
 {
-    for(Resource& resource : resources)
+    std::for_each(resources.begin(), resources.end(),
+    [](Resource& resource)
     {
         resource.changeCurrentValue();
-    }
+    });
 }
 
 void ResourceManager::applyEffect(const std::vector<ResourceEffect>& effects) {
-    for (const ResourceEffect& effect : effects) {
-        if (effect.type == ResourceType::RESOURCE_UNSPECIFIED) {
-            continue;
-        }
-        resources[getIndexForResourceType(effect.type)].changeDeltaPerTick(effect.deltaValue);
-    }
+    std::for_each(effects.begin(), effects.end(), [this](const ResourceEffect& effect)
+    {
+        if (effect.type == ResourceType::RESOURCE_UNSPECIFIED)
+            return;
+
+        resources[getIndexForResourceType(effect.type)]
+            .changeDeltaPerTick(effect.deltaValue);
+    });
 }
 
 LLint ResourceManager::getResourceValue(ResourceType type) const {
