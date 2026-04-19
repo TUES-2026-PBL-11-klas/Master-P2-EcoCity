@@ -1,7 +1,7 @@
 name: Build and Remote Deploy
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   workflow_dispatch:
 
 jobs:
@@ -13,13 +13,13 @@ jobs:
         include:
           - service: frontend
             context: ./deployment/frontend
-            test_command: 'echo "BE"'
+            test_command: 'echo "FE"'
           - service: backend
             context: ./deployment/backend
             test_command: 'echo "BE"'
           - service: worker
             context: ./deployment/worker
-            test_command: 'echo "BE"'
+            test_command: 'echo "DB"'
 
     steps:
       - name: Checkout Code
@@ -50,7 +50,8 @@ jobs:
       - name: Connect to Tailscale
         uses: tailscale/github-action@v2
         with:
-          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          oauth-client-id: ${{ secrets.TS_OAUTH_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
 
       - name: Set K8s Context
         uses: azure/k8s-set-context@v3
@@ -60,7 +61,6 @@ jobs:
 
       - name: Update K8s Images
         run: |
-          # This command maps the built image to your running K8s deployment
           kubectl set image deployment/frontend frontend=${{ secrets.SERVER_IP }}:5000/frontend:${{ github.sha }}
           kubectl set image deployment/backend backend=${{ secrets.SERVER_IP }}:5000/backend:${{ github.sha }}
           kubectl set image deployment/worker worker=${{ secrets.SERVER_IP }}:5000/worker:${{ github.sha }}
