@@ -39,7 +39,7 @@ jobs:
         uses: tailscale/github-action@v2
         with:
           oauth-client-id: ${{ secrets.OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.OAUTH_SECRED }}
+          oauth-secret: ${{ secrets.OAUTH_SECRET }}
           tags: tag:ci
 
       - name: Build Image
@@ -62,7 +62,7 @@ jobs:
         uses: tailscale/github-action@v2
         with:
           oauth-client-id: ${{ secrets.OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.OAUTH_SECRED }}
+          oauth-secret: ${{ secrets.OAUTH_SECRET }}
           tags: tag:ci
 
       - name: Set K8s Context
