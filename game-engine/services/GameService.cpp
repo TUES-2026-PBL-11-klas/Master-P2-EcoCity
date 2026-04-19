@@ -28,14 +28,8 @@ gameRepository(gameRepository), gameId(gameId)
     auto ms  = std::chrono::duration_cast<std::chrono::milliseconds>(
                 now.time_since_epoch()).count();
 
-    /*
     std::filesystem::path metricsDir = std::filesystem::path(PROJECT_SOURCE_DIR) / "metrics";
     std::filesystem::create_directories(metricsDir);
-    std::string filename = (metricsDir / ("game_" + std::to_string(ms) + ".csv")).string();
-    */
-
-    std::filesystem::path metricsDir = std::filesystem::path(PROJECT_SOURCE_DIR) / "metrics";
-    std::filesystem::create_directories("metricsDir");
 
     std::string filename = (metricsDir / ("resources_" + std::to_string(ms) + ".csv")).string();
     metricsFile_.open(filename, std::ios::app);
@@ -62,13 +56,17 @@ bool GameService::tick()
 {
     TRACE("GameService", "tick");
 
+    currentTraceId_ = generateTraceId();
+    LOG_INFO("GameService", "tick_start", "trace_id=" + currentTraceId_);
+    std::cout << "Tick " << tickCount_ + 1 << " - Trace ID: " << currentTraceId_ << std::endl;
+
     try {
         readPlayerInput();
     } catch (const InsufficientResourcesException& e) {
         LOG_WARN("GameService", "petition_insufficient_funds", e.what());
     }
 
-    const std::vector<CompletedConstruction> completedConstructions = petitionManager->tick();
+    const std::vector<CompletedConstruction> completedConstructions = petitionManager->tick(currentTraceId_);
     std::for_each(completedConstructions.begin(),
               completedConstructions.end(),
               [&](const CompletedConstruction& construction)
@@ -77,14 +75,14 @@ bool GameService::tick()
         city->addBuilding(construction.type);
     });
 
-    resourceManager->tick();
+    resourceManager->tick(currentTraceId_);
     handlePopulationScaling();
 
     socketServer->sendGameState(buildGameState());
 
     printResourceSnapshot(*resourceManager);
 
-    LOG_DEBUG("GameService", "tick_complete");
+    LOG_DEBUG("GameService", "tick_complete", "trace_id=" + currentTraceId_);
 
     metricsFile_ << ++tickCount_
     << "," << resourceManager->getResourceValue(MONEY)
@@ -175,7 +173,7 @@ void GameService::readPlayerInput()
 
     if (uiAction.save_game()) {
         try {
-            gameRepository->saveGame(gameId, *resourceManager, *petitionManager, *city);
+            gameRepository->saveGame(gameId, *resourceManager, *petitionManager, *city, currentTraceId_);
             LOG_INFO("GameService", "game_saved");
         } catch (const PersistenceException& e) {
             LOG_ERROR("GameService", "save_failed", e.what());

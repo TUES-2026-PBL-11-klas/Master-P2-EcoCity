@@ -47,7 +47,7 @@ class MongoGameRepository : public IGameRepository {
             const std::string& gameId,
             const ResourceManager& resourceManager,
             const PetitionManager& petitionManager,
-            const City& city
+            const City& city, const std::string& traceId=""
         ) override;
 
         SavedGame loadGame(const std::string& gameId);

@@ -179,9 +179,11 @@ void MongoGameRepository::saveGame(
     const std::string& gameId,
     const ResourceManager& resourceManager,
     const PetitionManager& petitionManager,
-    const City& city)
+    const City& city, const std::string& traceId)
 {
     TRACE("MongoGameRepository", "saveGame");
+
+    LOG_INFO("MongoGameRepository", "save_game_start", "game_id=" + gameId + ", trace_id=" + traceId);
 
     try {
     mongocxx::database database = client[databaseName];
@@ -236,7 +238,7 @@ void MongoGameRepository::saveGame(
         );
     }
 
-    LOG_INFO("MongoGameRepository", "game_saved", "game_id=" + gameId);
+    LOG_INFO("MongoGameRepository", "game_saved", "game_id=" + gameId + ", trace_id=" + traceId);
     } catch (const std::exception& e) {
         // Wrap any MongoDB or BSON exception in PersistenceException so callers
         // do not need to know about mongocxx internals.
