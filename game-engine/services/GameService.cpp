@@ -28,15 +28,22 @@ gameRepository(gameRepository), gameId(gameId)
     auto ms  = std::chrono::duration_cast<std::chrono::milliseconds>(
                 now.time_since_epoch()).count();
 
-    std::filesystem::create_directories("metrics");
+    /*
+    std::filesystem::path metricsDir = std::filesystem::path(PROJECT_SOURCE_DIR) / "metrics";
+    std::filesystem::create_directories(metricsDir);
+    std::string filename = (metricsDir / ("game_" + std::to_string(ms) + ".csv")).string();
+    */
 
-    std::string filename = "metrics/resources_" + std::to_string(ms) + ".csv";
+    std::filesystem::path metricsDir = std::filesystem::path(PROJECT_SOURCE_DIR) / "metrics";
+    std::filesystem::create_directories("metricsDir");
+
+    std::string filename = (metricsDir / ("resources_" + std::to_string(ms) + ".csv")).string();
     metricsFile_.open(filename, std::ios::app);
     if (!metricsFile_.is_open()) {
         throw std::runtime_error("Failed to open resource metrics file: " + filename);
     }
 
-    filename = "metrics/system_" + std::to_string(ms) + ".csv";
+    filename = (metricsDir / ("system_" + std::to_string(ms) + ".csv")).string();
     systemMetricsFile_.open(filename, std::ios::app);
     if (!systemMetricsFile_.is_open()) {
         throw std::runtime_error("Failed to open system metrics file: " + filename);

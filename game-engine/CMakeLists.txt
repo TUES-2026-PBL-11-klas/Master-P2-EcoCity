@@ -4,13 +4,13 @@ project(EcoCity CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# ── Dependencies via vcpkg ────────────────────────────────────────────────────
+# Dependencies via vcpkg
 find_package(protobuf CONFIG REQUIRED)
 find_package(mongocxx CONFIG REQUIRED)
 find_package(bsoncxx CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
 
-# ── Protobuf code generation ──────────────────────────────────────────────────
+# Protobuf code generation
 # Finds protoc automatically from the same vcpkg installation
 get_target_property(PROTOC_EXE protobuf::protoc IMPORTED_LOCATION_RELEASE)
 if(NOT PROTOC_EXE)
@@ -39,7 +39,7 @@ add_library(proto_gen STATIC
 target_include_directories(proto_gen PUBLIC "${PROTO_OUT_DIR}")
 target_link_libraries(proto_gen PUBLIC protobuf::libprotobuf)
 
-# ── Main game sources ─────────────────────────────────────────────────────────
+# Main game sources
 set(GAME_SRCS
     domain/Building.cpp
     domain/buildings/BuildingFactory.cpp
@@ -68,17 +68,18 @@ set(GAME_SRCS
 # Shared library of all non-main code (reused by tests)
 add_library(game_lib STATIC ${GAME_SRCS})
 target_include_directories(game_lib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_compile_definitions(game_lib PUBLIC PROJECT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(game_lib PUBLIC
     proto_gen
     mongo::mongocxx_shared
     mongo::bsoncxx_shared
 )
 
-# ── Main executable ───────────────────────────────────────────────────────────
+# Main executable
 add_executable(eco_city_engine main.cpp)
 target_link_libraries(eco_city_engine PRIVATE game_lib)
 
-# ── Unit tests ────────────────────────────────────────────────────────────────
+# Unit tests
 add_executable(run_tests
     tests/GameServiceTest.cpp
     tests/PetitionManagerTest.cpp
@@ -90,7 +91,7 @@ target_link_libraries(run_tests PRIVATE
     GTest::gtest
 )
 
-# ── Integration tests ─────────────────────────────────────────────────────────
+# Integration tests
 add_executable(run_integration_mongo
     tests/IntegrationMongoTest.cpp
     tests/test_main.cpp
@@ -109,7 +110,7 @@ target_link_libraries(run_integration_socket PRIVATE
     GTest::gtest
 )
 
-# ── Copy DLLs next to the exe on Windows ─────────────────────────────────────
+# Copy DLLs next to the exe on Windows
 if(WIN32)
     add_custom_command(TARGET eco_city_engine POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different
