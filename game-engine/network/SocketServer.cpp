@@ -3,7 +3,7 @@
 #include <cstring>
 #include <stdexcept>
 
-#include "../Logger.hpp"
+#include "../observability/Logger.hpp"
 
 #ifdef _WIN32
     #include <winsock2.h>

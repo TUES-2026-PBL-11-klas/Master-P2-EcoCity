@@ -48,8 +48,9 @@ public:
         auto ms  = std::chrono::duration_cast<std::chrono::milliseconds>(
                     now.time_since_epoch()).count();
 
-        std::filesystem::create_directories("logs");
-        std::string filename = "logs/game_" + std::to_string(ms) + ".log";
+        std::filesystem::path baseDir = std::filesystem::path(PROJECT_SOURCE_DIR) / "logs";
+        std::filesystem::create_directories(baseDir);
+        std::string filename = (baseDir / ("game_" + std::to_string(ms) + ".log")).string();
 
         static Logger inst(filename);
         return inst;
