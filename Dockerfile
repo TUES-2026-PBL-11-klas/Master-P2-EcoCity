@@ -39,14 +39,18 @@ FROM ubuntu:24.04 AS runtime
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        libprotobuf-lite32t64 \
-        libmongocxx \
-        libbsoncxx \
+        libprotobuf32t64 \
+        libmongoc-1.0-0 \
+        libbson-1.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY --from=builder /workspace/game-engine/eco_city_engine .
+
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libmongocxx*.so* /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libbsoncxx*.so* /usr/lib/x86_64-linux-gnu/
+RUN ldconfig
 
 EXPOSE 54321
 
