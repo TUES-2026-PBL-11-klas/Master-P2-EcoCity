@@ -86,11 +86,23 @@ static void restoreGame(
     LOG_INFO("main", "restoreGame", "Game state applied successfully from save.");
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     const std::string mongoConnectionString = "mongodb://localhost:27017/";
     const std::string databaseName = "Eco_city_game";
-    const std::string gameId = "local_game";
     const int uiPort = 54321;
+
+    // Optional --game-id <name> argument; defaults to "local_game".
+    // Usage:
+    //   eco_city_engine                        -> loads/saves "local_game"
+    //   eco_city_engine --game-id my_save      -> loads/saves "my_save"
+    std::string gameId = "local_game";
+    for (int i = 1; i < argc - 1; ++i) {
+        if (std::string(argv[i]) == "--game-id") {
+            gameId = argv[i + 1];
+            break;
+        }
+    }
+    LOG_INFO("main", "startup", "Using game_id=" + gameId);
 
     ResourceManager resourceManager;
     PetitionManager petitionManager;

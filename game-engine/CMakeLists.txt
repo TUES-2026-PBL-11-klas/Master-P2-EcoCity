@@ -17,6 +17,8 @@ if(NOT PROTOC_EXE)
     get_target_property(PROTOC_EXE protobuf::protoc IMPORTED_LOCATION)
 endif()
 
+message(STATUS "protoc path: ${PROTOC_EXE}")
+
 set(PROTO_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../game_api/v1")
 set(PROTO_FILE    "${PROTO_SRC_DIR}/api_types.proto")
 set(PROTO_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}")

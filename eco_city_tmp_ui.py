@@ -2,7 +2,14 @@
 
 # Eco City Game – Python TUI temporary UI for testing the C++ backend
 # Connects to the C++ backend on TCP port 54321
-# Protocol: 4-byte big-endian length header + protobuf-encoded body
+#
+# Protocol: 4-byte big-endian length header + 1-byte message-type tag + protobuf body
+#   0x01 = GameState   (regular per-tick update)
+#   0x02 = GameOver    (final message from engine before it closes the connection)
+#
+# On connect the UI sends a UIAction with game_id (field 3) set, so the
+# backend knows which save file to load.
+#
 # Protobuf is hand-encoded/decoded here so there is NO external dependency.
 # Only Python stdlib is used (socket, threading, curses, struct).
 
@@ -22,6 +29,10 @@ from typing import Optional
 
 WIRE_VARINT   = 0
 WIRE_LEN      = 2
+
+# 1-byte message-type prefix added to every framed packet (new protocol)
+MSG_GAME_STATE = 0x01
+MSG_GAME_OVER  = 0x02
 
 
 def _to_int32(val: int) -> int:
@@ -57,6 +68,12 @@ def _encode_field_bool(field_num: int, value: bool) -> bytes:
 def _encode_field_bytes(field_num: int, data: bytes) -> bytes:
     tag = (field_num << 3) | WIRE_LEN
     return _encode_varint(tag) + _encode_varint(len(data)) + data
+
+
+def _encode_field_string(field_num: int, text: str) -> bytes:
+    """Encode a UTF-8 string as a protobuf length-delimited field."""
+    encoded = text.encode("utf-8")
+    return _encode_field_bytes(field_num, encoded)
 
 
 def _decode_varint(data: bytes, pos: int):
@@ -138,6 +155,42 @@ class GameState:
     current_petition: Optional[Petition] = None
 
 
+# Reason strings for game-over screen.
+# Keys are the GameOverReason enum values from the proto (ints), with a
+# string fallback key "disconnected" for unexpected disconnects.
+GAME_OVER_REASONS = {
+    1: "A critical resource has run out.",
+    2: "CO₂ emissions have exceeded the safe limit!",
+    "disconnected": "The backend disconnected unexpectedly.",
+}
+
+MAX_CO2 = 100_000_000  # must match C++ GameService.hpp
+
+
+@dataclass
+class GameOver:
+    reason: int = 0                  # GameOverReason enum value (1=resource, 2=co2)
+    final_resources: dict = field(default_factory=dict)
+
+
+def parse_game_over(data: bytes) -> GameOver:
+    """Parse a GameOver protobuf message (field 1 = reason, field 2 = final_resources map)."""
+    go = GameOver()
+    for fn, wt, val in _decode_fields(data):
+        if fn == 1 and wt == WIRE_VARINT:
+            go.reason = val
+        elif fn == 2 and wt == WIRE_LEN:
+            res_key = 0
+            res_val = 0
+            for mf, _, mv in _decode_fields(val):
+                if mf == 1:
+                    res_key = mv
+                elif mf == 2:
+                    res_val = mv
+            go.final_resources[_as_int32(res_key)] = _as_int32(res_val)
+    return go
+
+
 def _parse_resource_effect(data: bytes) -> ResourceEffect:
     e = ResourceEffect()
     for fn, wt, val in _decode_fields(data):
@@ -209,10 +262,12 @@ def parse_game_state(data: bytes) -> GameState:
     return gs
 
 
-def encode_ui_action(accept: Optional[bool] = None, save: bool = False) -> bytes:
+def encode_ui_action(accept: Optional[bool] = None, save: bool = False,
+                     game_id: Optional[str] = None) -> bytes:
     # UIAction:
     # field 1: PetitionResponse { field 1: responded (bool), field 2: accepted (bool) }
     # field 2: save_game (bool)
+    # field 3: game_id (string) – sent once on connect
 
     body = b""
     if accept is not None:
@@ -220,6 +275,8 @@ def encode_ui_action(accept: Optional[bool] = None, save: bool = False) -> bytes
         body += _encode_field_bytes(1, pr)
     if save:
         body += _encode_field_bool(2, True)
+    if game_id:
+        body += _encode_field_string(3, game_id)
     return body
 
 
@@ -229,13 +286,17 @@ RECONNECT_DELAY = 2.0
 
 
 class GameConnection:
-    def __init__(self):
+    def __init__(self, game_id: str = "local_game"):
         self._sock: Optional[socket.socket] = None
         self._lock = threading.Lock()
         self.connected = False
         self.last_state: Optional[GameState] = None
+        self.game_over_info: Optional[GameOver] = None   # set when engine sends GameOver
         self.status_msg = "Connecting…"
         self._running = True
+        self.game_over = False
+        self.game_over_reason = "disconnected"
+        self._game_id = game_id
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
 
@@ -251,6 +312,8 @@ class GameConnection:
                     self._sock = s
                     self.connected = True
                     self.status_msg = f"Connected to {HOST}:{PORT}"
+                # Announce our game ID to the backend immediately after connecting
+                self._send_raw(encode_ui_action(game_id=self._game_id))
                 self._recv_loop(s)
             except (ConnectionRefusedError, OSError) as e:
                 with self._lock:
@@ -270,23 +333,48 @@ class GameConnection:
     def _recv_loop(self, sock: socket.socket):
         try:
             while self._running:
+                # Read framed packet: [4-byte length][payload]
+                # For GameOver frames the payload starts with a 0x02 tag byte (new protocol).
+                # GameState frames are raw protobuf with NO tag byte (existing C++ behaviour).
                 header = self._recvall(sock, 4)
                 if not header:
+                    # Backend closed without sending a GameOver – unexpected disconnect
                     with self._lock:
                         self.status_msg = "Disconnected – waiting for backend…"
+                        if self.last_state is not None and not self.game_over:
+                            self.game_over = True
+                            self.game_over_reason = "disconnected"
                     return
                 length = struct.unpack(">I", header)[0]
                 if length == 0 or length > 1_048_576:
                     return
-                payload = self._recvall(sock, length)
-                if not payload:
+                frame = self._recvall(sock, length)
+                if not frame:
                     return
-                try:
-                    gs = parse_game_state(payload)
 
-                    with self._lock:
-                        self.last_state = gs
-                        self.status_msg = f"Connected  |  last update: {time.strftime('%H:%M:%S')}"
+                # Detect message type by peeking at the first byte.
+                # 0x02 = GameOver (new, prefixed protocol).
+                # Anything else = raw GameState protobuf (existing C++ sendGameState).
+                # Note: a valid GameState proto's first byte is always a protobuf tag
+                # varint, which for field 1 (wire 2) = 0x0A, field 4 = 0x22,
+                # field 5 = 0x2A — never 0x02 — so the check is unambiguous.
+                try:
+                    if frame[0] == MSG_GAME_OVER:
+                        go = parse_game_over(frame[1:])
+                        with self._lock:
+                            self.game_over_info = go
+                            self.game_over = True
+                            self.game_over_reason = go.reason
+                            if self.last_state is not None and go.final_resources:
+                                self.last_state.resources = go.final_resources
+                            self.status_msg = "Game over."
+                        return
+                    else:
+                        # Raw GameState — the whole frame is the protobuf payload
+                        gs = parse_game_state(frame)
+                        with self._lock:
+                            self.last_state = gs
+                            self.status_msg = f"Connected  |  last update: {time.strftime('%H:%M:%S')}"
                 except Exception as e:
                     with self._lock:
                         self.status_msg = f"Parse error: {e}"
@@ -305,8 +393,8 @@ class GameConnection:
         return buf
 
 
-    def send_action(self, accept: Optional[bool] = None, save: bool = False):
-        payload = encode_ui_action(accept=accept, save=save)
+    def _send_raw(self, payload: bytes) -> bool:
+        """Send a length-framed payload (no message-type prefix — UI→backend messages don't use it)."""
         header = struct.pack(">I", len(payload))
         with self._lock:
             sock = self._sock
@@ -317,6 +405,9 @@ class GameConnection:
             except OSError:
                 pass
         return False
+
+    def send_action(self, accept: Optional[bool] = None, save: bool = False):
+        return self._send_raw(encode_ui_action(accept=accept, save=save))
 
 
     def stop(self):
@@ -403,7 +494,167 @@ def resource_color(rtype: int, amount: int) -> str:
     return "good"
 
 
-def render(stdscr, conn: GameConnection, flash_msg: list):
+def render_game_over(stdscr, conn: GameConnection):
+    """
+    Full-screen game-over overlay.
+    Keys:  N = new game (restart backend, same UI loop)
+           Q = quit UI entirely
+    Returns True if the user wants to quit, False if they want a new game.
+    """
+    stdscr.nodelay(False)  # block on input while the overlay is shown
+
+    with conn._lock:
+        reason_key = conn.game_over_reason   # int (proto enum) or "disconnected"
+        go_info    = conn.game_over_info
+        state      = conn.last_state
+
+    reason_text = GAME_OVER_REASONS.get(reason_key, "The game has ended.")
+
+    # Build a short final-stats summary: prefer the GameOver final_resources snapshot
+    # (accurate at the exact moment the engine stopped), fall back to last GameState.
+    resources_to_show = {}
+    if go_info and go_info.final_resources:
+        resources_to_show = go_info.final_resources
+    elif state:
+        resources_to_show = state.resources
+
+    stats_lines = []
+    for rtype in sorted(resources_to_show):
+        rname  = RESOURCE_NAMES.get(rtype, f"Resource {rtype}")
+        amount = resources_to_show[rtype]
+        stats_lines.append(f"  {rname:<22} {amount:>12,}")
+
+    while True:
+        stdscr.erase()
+        h, w = stdscr.getmaxyx()
+
+        # Darken the whole screen
+        for row in range(h):
+            safe_addstr(stdscr, row, 0, " " * w, cp("dim") | curses.A_REVERSE)
+
+        # Centre the overlay box
+        box_h = max(14, len(stats_lines) + 10)
+        box_w = min(60, w - 4)
+        box_y = max(0, (h - box_h) // 2)
+        box_x = max(0, (w - box_w) // 2)
+
+        draw_box(stdscr, box_y, box_x, box_h, box_w, " GAME OVER ")
+
+        # Title
+        label = "★  GAME OVER  ★"
+        safe_addstr(stdscr, box_y + 1, box_x + (box_w - len(label)) // 2,
+                    label, cp("bad") | curses.A_BOLD)
+
+        # Reason
+        safe_addstr(stdscr, box_y + 2, box_x + 2,
+                    reason_text[:box_w - 4], cp("warn"))
+
+        # Stats header
+        if stats_lines:
+            safe_addstr(stdscr, box_y + 4, box_x + 2,
+                        "Final Resources:", cp("header") | curses.A_UNDERLINE)
+            for i, line in enumerate(stats_lines):
+                if box_y + 5 + i >= box_y + box_h - 4:
+                    break
+                safe_addstr(stdscr, box_y + 5 + i, box_x + 2,
+                            line[:box_w - 4], cp("neutral"))
+
+        # Action prompt
+        prompt_y = box_y + box_h - 3
+        safe_addstr(stdscr, prompt_y, box_x + 2,
+                    "[ N ]", cp("accept") | curses.A_BOLD)
+        safe_addstr(stdscr, prompt_y, box_x + 9,
+                    " New game  (restart the backend)", cp("good"))
+        safe_addstr(stdscr, prompt_y + 1, box_x + 2,
+                    "[ Q ]", cp("reject") | curses.A_BOLD)
+        safe_addstr(stdscr, prompt_y + 1, box_x + 9,
+                    " Quit", cp("bad"))
+
+        stdscr.refresh()
+
+        key = stdscr.getch()
+        if key == curses.ERR:
+            continue
+        ch = chr(key).lower() if 0 < key < 256 else ""
+        if ch == "q":
+            return True   # quit
+        if ch == "n":
+            return False  # new game
+
+
+def render_new_game_prompt(stdscr, current_game_id: str = "local_game") -> str:
+    """
+    Shown after the user pressed N on the game-over screen, or on first launch.
+    Lets the player type a game ID (default: current_game_id).
+    Returns the chosen game ID string.
+    """
+    stdscr.nodelay(False)
+    curses.echo()
+    curses.curs_set(1)
+
+    game_id = current_game_id
+
+    while True:
+        stdscr.erase()
+        h, w = stdscr.getmaxyx()
+
+        for row in range(h):
+            safe_addstr(stdscr, row, 0, " " * w, cp("dim") | curses.A_REVERSE)
+
+        box_h = 14
+        box_w = min(68, w - 4)
+        box_y = max(0, (h - box_h) // 2)
+        box_x = max(0, (w - box_w) // 2)
+
+        draw_box(stdscr, box_y, box_x, box_h, box_w, " NEW GAME ")
+
+        lines = [
+            "Enter a game ID to load or create a save.",
+            "Leave blank to use the default (local_game).",
+            "",
+            "  Each game ID maps to a separate MongoDB document,",
+            "  so you can keep multiple independent saves.",
+            "",
+            "After confirming, restart the backend with:",
+            "  eco_city_engine --game-id <your_id>",
+            "",
+            "Press ENTER to confirm.",
+        ]
+        for i, line in enumerate(lines):
+            if box_y + 1 + i >= box_y + box_h - 3:
+                break
+            safe_addstr(stdscr, box_y + 1 + i, box_x + 2,
+                        line[:box_w - 4], cp("neutral"))
+
+        # Input field
+        field_y = box_y + box_h - 3
+        label = "Game ID: "
+        safe_addstr(stdscr, field_y, box_x + 2, label, cp("header") | curses.A_BOLD)
+        field_x = box_x + 2 + len(label)
+        field_w = box_w - 2 - len(label) - 2
+
+        # Draw input area
+        safe_addstr(stdscr, field_y, field_x, " " * field_w, cp("neutral") | curses.A_REVERSE)
+        safe_addstr(stdscr, field_y, field_x, game_id[:field_w], cp("neutral") | curses.A_REVERSE)
+
+        stdscr.move(field_y, field_x + min(len(game_id), field_w))
+        stdscr.refresh()
+
+        # Read one character at a time for inline editing
+        key = stdscr.getch()
+        if key in (curses.KEY_ENTER, ord('\n'), ord('\r')):
+            chosen = game_id.strip() or "local_game"
+            curses.noecho()
+            curses.curs_set(0)
+            return chosen
+        elif key in (curses.KEY_BACKSPACE, 127, 8):
+            game_id = game_id[:-1]
+        elif 32 <= key < 127:  # printable ASCII only
+            if len(game_id) < field_w - 1:
+                game_id += chr(key)
+
+
+def render(stdscr, conn: GameConnection, flash_msg: list, game_id: str = "local_game"):
     stdscr.erase()
     h, w = stdscr.getmaxyx()
 
@@ -413,7 +664,7 @@ def render(stdscr, conn: GameConnection, flash_msg: list):
         connected = conn.connected
 
     # Title bar
-    title = "       ECO CITY GAME — Dashboard  "
+    title = f"       ECO CITY GAME — Dashboard  [{game_id}]  "
     safe_addstr(stdscr, 0, 0, " " * w, cp("title") | curses.A_REVERSE)
     safe_addstr(stdscr, 0, max(0, (w - len(title)) // 2), title,
                 cp("title") | curses.A_REVERSE | curses.A_BOLD)
@@ -437,8 +688,10 @@ def render(stdscr, conn: GameConnection, flash_msg: list):
     col1_x = 2
     col2_x = w // 2 + 1
 
-    # Resources panel
-    panel_h = 9
+    # Resources panel – size dynamically to fit every resource row.
+    # 3 = top border + header row + bottom border
+    num_resources = max(len(resource_cache), 5)  # at least 5 rows reserved
+    panel_h = num_resources + 3
     draw_box(stdscr, 3, col1_x, panel_h, w // 2 - 2, "RESOURCES")
 
     safe_addstr(stdscr, 4, col1_x + 2,
@@ -461,9 +714,6 @@ def render(stdscr, conn: GameConnection, flash_msg: list):
 
         safe_addstr(stdscr, row_y + i, col1_x + 25,
                     f"{ramount:>10,}", cp(rclr) | curses.A_BOLD)
-
-    safe_addstr(stdscr, 7, col1_x + 2,
-                "(live resource updates)", cp("dim") | curses.A_DIM)
 
     # Buildings panel
     bld_start_y = 3 + panel_h + 1
@@ -539,10 +789,12 @@ def main(stdscr):
     stdscr.timeout(50)
     init_colors()
 
-    conn = GameConnection()
+    # Ask the player which save to load on startup
+    game_id = render_new_game_prompt(stdscr, "local_game")
+
+    conn = GameConnection(game_id=game_id)
     flash_msg = []
     flash_until = 0.0
-
     last_state = None
 
     try:
@@ -551,12 +803,32 @@ def main(stdscr):
             if now > flash_until:
                 flash_msg.clear()
 
-            # Only redraw when something changes
+            # Check for game over before processing regular input
             with conn._lock:
+                is_game_over = conn.game_over
                 current_state = conn.last_state
 
+            if is_game_over:
+                conn.stop()
+                want_quit = render_game_over(stdscr, conn)
+                if want_quit:
+                    return
+
+                # Player chose N: let them pick a new game ID
+                game_id = render_new_game_prompt(stdscr, game_id)
+
+                # Reset and reconnect
+                resource_cache.clear()
+                conn = GameConnection(game_id=game_id)
+                flash_msg = []
+                flash_until = 0.0
+                last_state = None
+                stdscr.nodelay(True)
+                stdscr.timeout(50)
+                continue
+
             if last_state is None or current_state is not last_state or flash_msg:
-                render(stdscr, conn, flash_msg)
+                render(stdscr, conn, flash_msg, game_id)
                 last_state = current_state
 
             key = stdscr.getch()

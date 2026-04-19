@@ -112,7 +112,37 @@ bool GameService::tick()
             LOG_WARN("GameService", "high_cpu", "cpu_pct=" + std::to_string(metrics.cpuPercent));
     }
 
-    return checkGameOver();
+    bool over = checkGameOver();
+    if (over) {
+        sendGameOverNotification();
+    }
+    return over;
+}
+
+void GameService::sendGameOverNotification()
+{
+    game_api::v1::GameOver msg;
+
+    // Determine reason (mirrors checkGameOver logic)
+    bool resourceDepleted = std::any_of(
+        resourceManager->begin(), resourceManager->end(),
+        [](const Resource& r) {
+            return r.getCurrentValue() <= 0 && r.getType() != CO2;
+        });
+
+    if (resourceDepleted) {
+        msg.set_reason(game_api::v1::GAME_OVER_REASON_RESOURCE_DEPLETED);
+    } else {
+        msg.set_reason(game_api::v1::GAME_OVER_REASON_CO2_LIMIT_EXCEEDED);
+    }
+
+    // Attach final resource snapshot
+    for (const Resource& resource : *resourceManager) {
+        (*msg.mutable_final_resources())[resource.getType()] =
+            static_cast<int32_t>(resource.getCurrentValue());
+    }
+
+    socketServer->sendGameOver(msg);
 }
 
 bool GameService::checkGameOver()

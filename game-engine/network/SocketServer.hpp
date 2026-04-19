@@ -8,7 +8,7 @@
 #include <string>
 #include <optional>
 
-#include "../api_types.pb.h"
+#include "api_types.pb.h"
 #include "ISocketServer.hpp"
 
 class SocketServer : public ISocketServer {
@@ -25,7 +25,7 @@ class SocketServer : public ISocketServer {
         // starts listening successfully or hits a fatal socket error.
         std::promise<void> startupPromise_;
 
-        // We all know what file decriptors are, right? that is what fd stands for
+        // We all know what file descriptors are, right? that is what fd stands for
         int serverFd;
         int clientFd;
 
@@ -39,6 +39,9 @@ class SocketServer : public ISocketServer {
 
         std::optional<game_api::v1::UIAction> pollAction() override;
         void sendGameState(const game_api::v1::GameState& state) override;
+        // Serialises and sends a GameOver message, then closes the client socket
+        // so the UI receives EOF immediately after the final message.
+        void sendGameOver(const game_api::v1::GameOver& gameOver) override;
         void stop() override;
 };
 

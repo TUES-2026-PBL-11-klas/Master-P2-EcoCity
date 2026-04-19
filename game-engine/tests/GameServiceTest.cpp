@@ -49,10 +49,17 @@ class FakeSocketServer : public ISocketServer {
             sentStates.push_back(state);
         }
 
+        void sendGameOver(const game_api::v1::GameOver& gameOver) override
+        {
+            lastGameOver = gameOver;
+        }
+
         void stop() override
         {
             stopped = true;
         }
+
+        std::optional<game_api::v1::GameOver> lastGameOver;
 };
 
 class FakeGameRepository : public IGameRepository {

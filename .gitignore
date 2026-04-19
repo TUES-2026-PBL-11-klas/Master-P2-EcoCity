@@ -51,3 +51,5 @@ game-engine/NUL
 
 .vscode/*
 .venv/*
+
+game-engine/build/*

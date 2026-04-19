@@ -48,6 +48,7 @@ class GameService : public IGameService {
         long long int nextPopulationGoal = 1200000;
 
         bool checkGameOver();
+        void sendGameOverNotification();
         game_api::v1::GameState buildGameState() const;
 
     public:

@@ -68,7 +68,8 @@ void SocketServer::listenLoop()
 
     int opt = 1;
     #ifdef _WIN32
-        setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
+        const char* optPtr = reinterpret_cast<const char*>(&opt);
+        setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, optPtr, sizeof(opt));
     #else
         setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
     #endif
@@ -186,4 +187,45 @@ void SocketServer::sendGameState(const game_api::v1::GameState& state)
     if (state.SerializeToString(&serialized)) {
         sendBytes(serialized);
     }
+}
+
+void SocketServer::sendGameOver(const game_api::v1::GameOver& gameOver)
+{
+    // The UI distinguishes a GameOver message from a regular GameState by reading
+    // a 1-byte message-type prefix that we prepend to the payload:
+    //   0x01 = GameState  (all existing traffic)
+    //   0x02 = GameOver
+    //
+    // This keeps backward-compatibility: old UI clients that do not understand
+    // the prefix will simply fail to parse the payload and disconnect cleanly.
+
+    std::string serialized;
+    if (!gameOver.SerializeToString(&serialized)) return;
+
+    // Build the framed packet: [4-byte length][1-byte type=0x02][payload]
+    uint32_t frameLen = 1 + static_cast<uint32_t>(serialized.size());
+    uint8_t header[4] = {
+        (uint8_t)(frameLen >> 24),
+        (uint8_t)(frameLen >> 16),
+        (uint8_t)(frameLen >> 8),
+        (uint8_t)(frameLen)
+    };
+
+    #ifdef _WIN32
+        send(clientFd, (const char*)header, 4, 0);
+        uint8_t msgType = 0x02;
+        send(clientFd, (const char*)&msgType, 1, 0);
+        send(clientFd, serialized.c_str(), static_cast<int>(serialized.size()), 0);
+    #else
+        send(clientFd, header, 4, 0);
+        uint8_t msgType = 0x02;
+        send(clientFd, &msgType, 1, 0);
+        send(clientFd, serialized.c_str(), serialized.size(), 0);
+    #endif
+
+    LOG_INFO("SocketServer", "game_over_sent");
+
+    // Close the client socket immediately so the UI receives EOF right after.
+    closesocket(clientFd);
+    clientFd = INVALID_SOCKET;
 }

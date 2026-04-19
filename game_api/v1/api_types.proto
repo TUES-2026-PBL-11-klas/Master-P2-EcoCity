@@ -29,6 +29,12 @@ enum ResourceType {
   RESOURCE_TYPE_CO2 = 5;
 }
 
+enum GameOverReason {
+  GAME_OVER_REASON_UNSPECIFIED = 0;
+  GAME_OVER_REASON_RESOURCE_DEPLETED = 1;
+  GAME_OVER_REASON_CO2_LIMIT_EXCEEDED = 2;
+}
+
 // Shared Messages
 
 message ResourceEffect {
@@ -56,6 +62,12 @@ message GameState {
   Petition current_petition = 4;
 }
 
+// Sent by the backend as the last message before it closes the connection.
+message GameOver {
+  GameOverReason reason = 1;
+  map<int32, int32> final_resources = 2; // snapshot of resources at game end
+}
+
 // UI → Backend
 
 message PetitionResponse {
@@ -66,4 +78,5 @@ message PetitionResponse {
 message UIAction {
   PetitionResponse petition_response = 1;
   bool save_game = 2;
+  string game_id = 3; // sent once on connect so the backend knows which save to load
 }
