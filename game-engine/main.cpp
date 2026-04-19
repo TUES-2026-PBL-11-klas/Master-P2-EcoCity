@@ -1,0 +1,167 @@
+#include <iostream>
+#include <thread>
+#include <chrono>
+#include <memory>
+#include <stdexcept>
+
+#include "services/GameService.hpp"
+#include "services/ResourceManager.hpp"
+#include "services/PetitionManager.hpp"
+#include "domain/City.hpp"
+#include "domain/buildings/BuildingFactory.hpp"
+#include "persistence/MongoGameRepository.hpp"
+#include "network/SocketServer.hpp"
+#include "observability/Logger.hpp"
+#include "exceptions/InsufficientResourcesException.hpp"
+#include "exceptions/PersistenceException.hpp"
+
+#include <mongocxx/instance.hpp>
+
+static mongocxx::instance mongoInstance{};
+
+// Restoring petitions under construction is the trickiest part because Building
+// counts down ticksToComplete internally.  We create a fresh building with
+// createBuilding() (which sets the *full* tick cost) and then call buildTick()
+// repeatedly until the remaining counter matches what was saved.  That keeps
+// all the Building subclass logic intact without touching private members.
+
+// Applies a SavedGame snapshot back onto the live objects so the game continues exactly where it was saved
+static void restoreGame(
+    const SavedGame& save,
+    ResourceManager& resourceManager,
+    PetitionManager& petitionManager,
+    City& city)
+{
+    if (!save.found) return;
+
+    // Resources
+    for (const auto& rd : save.resources)
+    {
+        if (rd.type == RESOURCE_UNSPECIFIED) continue;
+
+        // Bring current value to the saved amount
+        long long current = resourceManager.getResourceValue(rd.type);
+        resourceManager.changeResourceValue(rd.type, rd.amount - current);
+
+        resourceManager.setDeltaForResourceType(rd.type, rd.changesPerTick);
+    }
+
+    // Building counts (City)
+    for (const auto& [bt, count] : save.buildingCounts)
+    {
+        for (int i = 0; i < count; ++i) {
+            city.addBuilding(bt);
+        }
+    }
+
+    // Petitions under construction
+    for (const auto& pd : save.underConstructionPetitions)
+    {
+        Building* building = createBuilding(pd.buildingType);
+        if (building == nullptr) continue;
+
+        building->setTicksToComplete(pd.ticksRemaining);
+
+        // Wrap in a Petition and inject it directly into PetitionManager.
+        Petition* petition = new Petition(pd.id, building);
+        petitionManager.restoreUnderConstruction(petition);
+    }
+
+    // Current petition
+    if (save.hasCurrentPetition) {
+        const auto& pd = save.currentPetition;
+        Building* building = createBuilding(pd.buildingType);
+
+        if (building == nullptr) {
+            throw std::invalid_argument("Invalid building type in saved current petition");
+        }
+
+        building->setTicksToComplete(pd.ticksRemaining);
+        building->setBuildCost(pd.cost);
+
+        Petition* petition = new Petition(pd.id, building);
+        petitionManager.restoreCurrentPetition(petition);
+    }
+
+    LOG_INFO("main", "restoreGame", "Game state applied successfully from save.");
+}
+
+int main() {
+    const std::string mongoConnectionString = "mongodb://localhost:27017/";
+    const std::string databaseName = "Eco_city_game";
+    const std::string gameId = "local_game";
+    const int uiPort = 54321;
+
+    ResourceManager resourceManager;
+    PetitionManager petitionManager;
+    City city;
+
+    // SocketServer constructor blocks until the socket is bound and listening.
+    // It throws std::runtime_error if the port is unavailable.
+    SocketServer socketServer(uiPort);
+
+    MongoGameRepository gameRepository(mongoConnectionString, databaseName);
+
+    // Try to load an existing save.
+    // PersistenceException is thrown if MongoDB is unreachable or the data is corrupt.
+    SavedGame save;
+    try {
+        save = gameRepository.loadGame(gameId);
+    } catch (const PersistenceException& e) {
+        LOG_ERROR("main", "loadGame", std::string("Could not load save: ") + e.what());
+        return 1;
+    }
+
+    if (save.found)
+    {
+        LOG_INFO("main", "loadGame", "Saved game found, resuming.");
+        try{
+            restoreGame(save, resourceManager, petitionManager, city);
+        } catch (const std::exception& e) {
+            LOG_ERROR("main", "restoreGame", std::string("Failed to restore game state: ") + e.what());
+            return 1;
+        }
+    }
+    else
+    {
+        LOG_INFO("main", "loadGame", "No saved game found, starting new game.");
+        try {
+            gameRepository.saveGame(gameId, resourceManager, petitionManager, city);
+            LOG_INFO("main", "saveGame", "Saved initial game state to MongoDB with game_id=" + gameId);
+        } catch (const PersistenceException& e) {
+            LOG_ERROR("main", "saveGame", std::string("Could not write initial save: ") + e.what());
+            return 1;
+        }
+    }
+
+    std::unique_ptr<GameService> gameService;
+    try {
+        gameService = std::make_unique<GameService>(
+            &resourceManager,
+            &petitionManager,
+            &city,
+            &socketServer,
+            &gameRepository,
+            gameId
+        );
+    } catch (const std::exception& e) {
+        LOG_ERROR("main", "gameService", std::string("Could not initialize game service: ") + e.what());
+        return 1;
+    }
+
+    bool endGame = false;
+    try {
+        while (!endGame)
+        {
+            endGame = gameService->tick();
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        }
+    } catch (const std::exception& e) {
+        // Last-resort catch: any unhandled exception from the game loop is
+        // logged here before the process exits cleanly.
+        LOG_ERROR("main", "game_loop", std::string("Fatal error: ") + e.what());
+        return 1;
+    }
+
+    return 0;
+}

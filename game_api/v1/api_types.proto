@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package game_api.v1;
+
+// Enums
+
+enum BuildingType {
+  BUILDING_TYPE_UNSPECIFIED = 0;
+  BUILDING_TYPE_POWER_PLANT = 1;
+  BUILDING_TYPE_WATER_TREATMENT_PLANT = 2;
+  BUILDING_TYPE_SOLAR_PANEL_FARM = 3;
+  BUILDING_TYPE_SOLAR_PANEL_ROOFTOPS = 4;
+  BUILDING_TYPE_PUBLIC_TRANSPORT_UPGRADE = 5;
+  BUILDING_TYPE_WIND_TURBINE_FARM = 6;
+  BUILDING_TYPE_HYDROELECTRIC_PLANT = 7;
+  BUILDING_TYPE_URBAN_GREENING = 8;
+  BUILDING_TYPE_WATER_SAVING_INFRASTRUCTURE = 9;
+  BUILDING_TYPE_INDUSTRIAL_ZONE = 10;
+  BUILDING_TYPE_AIRPORT_EXPANSION = 11;
+  BUILDING_TYPE_ROAD_IMPROVEMENT = 12;
+}
+
+enum ResourceType {
+  RESOURCE_TYPE_UNSPECIFIED = 0;
+  RESOURCE_TYPE_WATER = 1;
+  RESOURCE_TYPE_ENERGY = 2;
+  RESOURCE_TYPE_MONEY = 3;
+  RESOURCE_TYPE_POPULATION = 4;
+  RESOURCE_TYPE_CO2 = 5;
+}
+
+// Shared Messages
+
+message ResourceEffect {
+  ResourceType resource_type = 1;
+  int32 delta_value = 2;
+}
+
+message Building {
+  BuildingType type = 1;
+  int32 build_cost = 2;
+  int32 ticks_to_complete = 3;
+  repeated ResourceEffect effects = 4;
+}
+
+message Petition {
+  int32 id = 1;
+  Building building = 2;
+}
+
+// Backend → UI
+
+message GameState {
+  map<int32, int32> building_counts = 1; // key = BuildingType value
+  map<int32, int32> resources = 5;
+  Petition current_petition = 4;
+}
+
+// UI → Backend
+
+message PetitionResponse {
+  bool responded = 1; // false = not yet answered
+  bool accepted = 2; // true = accepted, false = rejected
+}
+
+message UIAction {
+  PetitionResponse petition_response = 1;
+  bool save_game = 2;
+}

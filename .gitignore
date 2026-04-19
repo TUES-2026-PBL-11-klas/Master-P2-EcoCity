@@ -39,3 +39,15 @@
 
 # debug information files
 *.dwo
+
+UI/target/*
+game-engine/logs/*
+game-engine/metrics/*
+game-engine/eco_city_engine
+game-engine/tests/GameServiceTest
+game-engine/tests/PetitionManagerTest
+game-engine/tests/ResourceManagerTest
+game-engine/NUL
+
+.vscode/*
+.venv/*
