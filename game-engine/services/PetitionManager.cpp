@@ -11,9 +11,11 @@ PetitionManager::PetitionManager()
 }
 
 // Returns effects of the completed petitions
-std::vector<CompletedConstruction> PetitionManager::tick()
+std::vector<CompletedConstruction> PetitionManager::tick(const std::string& traceId="")
 {
     TRACE("PetitionManager", "tick");
+
+    LOG_INFO("PetitionManager", "tick_start", "trace_id=" + traceId);
 
     std::vector<Petition*> petitionsToRemove;
     std::vector<CompletedConstruction> completedConstructions;

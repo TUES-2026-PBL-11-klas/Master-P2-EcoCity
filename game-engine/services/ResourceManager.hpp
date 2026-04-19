@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <array>
+#include <string>
 #include "../domain/Resource.hpp"
 #include "../domain/ResourceEffect.hpp"
 
@@ -21,7 +22,7 @@ class ResourceManager {
         std::array<Resource, 5>::const_iterator end()   const { return resources.end();   }
 
         ResourceManager();
-        void tick();
+        void tick(const std::string& traceID="");
         void applyEffect(const std::vector<ResourceEffect>& effects);
         void changeResourceValue(ResourceType type, LLint delta);
         bool canAfford(LLint amount) const;

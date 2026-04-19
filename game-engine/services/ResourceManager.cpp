@@ -1,8 +1,8 @@
 #include "ResourceManager.hpp"
+#include "../observability/Logger.hpp"
 
 #include <iostream>
 #include <stdexcept>
-#include <string>
 #include <algorithm>
 
 //Single Responsibility Principle - manages solely the logic for the resources
@@ -43,8 +43,10 @@ int ResourceManager::getIndexForResourceType(ResourceType type) const
     return idx;
 }
 
-void ResourceManager::tick()
+void ResourceManager::tick(const std::string& traceId="")
 {
+    LOG_INFO("ResourceManager", "tick_start", "trace_id=" + traceId);
+
     std::for_each(resources.begin(), resources.end(),
     [](Resource& resource)
     {

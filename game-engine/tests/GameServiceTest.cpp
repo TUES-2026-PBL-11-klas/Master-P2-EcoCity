@@ -64,7 +64,7 @@ class FakeGameRepository : public IGameRepository {
             const std::string& gameId,
             const ResourceManager&,
             const PetitionManager&,
-            const City&
+            const City&, const std::string& traceId=""
         ) override
         {
             ++saveCalls;

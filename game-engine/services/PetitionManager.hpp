@@ -6,6 +6,7 @@
 #include <utility>
 #include <vector>
 #include <array>
+#include <string>
 
 #include "../domain/Petition.hpp"
 #include "../domain/buildings/BuildingFactory.hpp"
@@ -24,7 +25,7 @@ class PetitionManager {
 
     public:
         PetitionManager();
-        std::vector<CompletedConstruction> tick();
+        std::vector<CompletedConstruction> tick(const std::string& traceId="");
         void acceptPetition();
         void rejectPetition();
         Petition* generatePetition();
