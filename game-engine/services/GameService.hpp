@@ -14,8 +14,18 @@
 #include "../persistence/IGameRepository.hpp"
 #include "../observability/SystemMetrics.hpp"
 
-
 #include <fstream>
+
+#include <random>
+
+inline std::string generateTraceId()
+{
+    std::mt19937 rng(std::random_device{}());
+    std::uniform_int_distribution<uint32_t> dist;
+    char buf[17];
+    snprintf(buf, sizeof(buf), "%08x%08x", dist(rng), dist(rng));
+    return std::string(buf);
+}
 
 #define MAX_CO2 100'000'000LL
 const double SCALING_FACTOR = 1.2;
@@ -34,6 +44,7 @@ class GameService : public IGameService {
         std::ofstream systemMetricsFile_;
         ProcStat lastProcStat_ = readProcStat();
         long long tickCount_ = 0;
+        std::string currentTraceId_;
         long long int nextPopulationGoal = 1200000;
 
         bool checkGameOver();

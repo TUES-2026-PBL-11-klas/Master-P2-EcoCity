@@ -15,7 +15,7 @@ class IGameRepository {
             const std::string& gameId,
             const ResourceManager& resourceManager,
             const PetitionManager& petitionManager,
-            const City& city
+            const City& city, const std::string& traceId=""
         ) = 0;
 };
 

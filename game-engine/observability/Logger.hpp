@@ -42,17 +42,20 @@ private:
         }
         return "INFO";
     }
-public:
-    static Logger& instance() {
-        auto now = std::chrono::system_clock::now();
-        auto ms  = std::chrono::duration_cast<std::chrono::milliseconds>(
-                    now.time_since_epoch()).count();
+
+    static Logger createInstance() {
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::system_clock::now().time_since_epoch()).count();
 
         std::filesystem::path baseDir = std::filesystem::path(PROJECT_SOURCE_DIR) / "logs";
         std::filesystem::create_directories(baseDir);
         std::string filename = (baseDir / ("game_" + std::to_string(ms) + ".log")).string();
+        return Logger(filename);
+    }
 
-        static Logger inst(filename);
+public:
+    static Logger& instance() {
+        static Logger inst = createInstance();
         return inst;
     }
 
