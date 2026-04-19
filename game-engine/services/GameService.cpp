@@ -26,15 +26,25 @@ gameRepository(gameRepository), gameId(gameId)
                 now.time_since_epoch()).count();
 
     std::filesystem::create_directories("metrics");
-    std::string filename = "metrics/game_" + std::to_string(ms) + ".csv";
 
+    std::string filename = "metrics/resources_" + std::to_string(ms) + ".csv";
     metricsFile_.open(filename, std::ios::app);
     if (!metricsFile_.is_open()) {
-        throw std::runtime_error("Failed to open metrics file: " + filename);
+        throw std::runtime_error("Failed to open resource metrics file: " + filename);
+    }
+
+    filename = "metrics/system_" + std::to_string(ms) + ".csv";
+    systemMetricsFile_.open(filename, std::ios::app);
+    if (!systemMetricsFile_.is_open()) {
+        throw std::runtime_error("Failed to open system metrics file: " + filename);
     }
 
     if (metricsFile_.tellp() == 0) {
         metricsFile_ << "tick,money,energy,water,co2,population\n";
+    }
+
+    if (systemMetricsFile_.tellp() == 0) {
+        systemMetricsFile_ << "tick,cpu_percent,mem_kb,thread_count\n";
     }
 }
 
@@ -67,6 +77,25 @@ bool GameService::tick()
     << "," << resourceManager->getResourceValue(POPULATION)
     << "\n";
     metricsFile_.flush();
+
+    if(tickCount_ % 10 == 0)
+    {
+        ProcStat curr = readProcStat();
+        SystemMetrics metrics = readSystemMetrics(lastProcStat_, curr);
+        lastProcStat_ = curr;
+
+        systemMetricsFile_
+            << tickCount_          << ","
+            << metrics.cpuPercent  << ","
+            << metrics.memUsedKB   << ","
+            << metrics.threadCount << "\n";
+        systemMetricsFile_.flush();
+
+        if (metrics.memUsedKB > 500000)
+            LOG_WARN("GameService", "high_memory", "mem_kb=" + std::to_string(metrics.memUsedKB));
+        if (metrics.cpuPercent > 80.0)
+            LOG_WARN("GameService", "high_cpu", "cpu_pct=" + std::to_string(metrics.cpuPercent));
+    }
 
     return checkGameOver();
 }
