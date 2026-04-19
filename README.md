@@ -13,7 +13,7 @@ EcoCity е игра, направена за училищен проект по 
 | Left columns  | Right columns |
 | ------------- |:-------------:|
 | Backend       | C++           |
-|UI             | Rust          |
+|UI             | Python        |
 | Database      | MongoDB       |
 
 ## Tests
