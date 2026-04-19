@@ -2,6 +2,7 @@ name: Build and Remote Deploy
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   build-test-push:
@@ -11,14 +12,14 @@ jobs:
       matrix:
         include:
           - service: frontend
-            context: ./frontend
-            test_command: 'echo "UI test command placeholder'
+            context: ./deployment/frontend
+            test_command: 'echo "BE"'
           - service: backend
-            context: ./backend
-            test_command: 'echo "BE test command placeholder'
-          - service: database
-            context: ./db
-            test_command: 'echo "DB test command placeholder'
+            context: ./deployment/backend
+            test_command: 'echo "BE"'
+          - service: worker
+            context: ./deployment/worker
+            test_command: 'echo "BE"'
 
     steps:
       - name: Checkout Code
@@ -35,7 +36,6 @@ jobs:
 
       - name: Run Service-Specific Tests
         run: |
-          # The container runs the specific command defined in the matrix above
           docker run --rm ${{ secrets.SERVER_IP }}:5000/${{ matrix.service }}:${{ github.sha }} ${{ matrix.test_command }}
 
       - name: Push to Arch Server Registry
@@ -57,9 +57,9 @@ jobs:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBECONFIG }}
 
-      - name: Rollout New Images
+      - name: Update K8s Images
         run: |
-          # Update images using the SHA from the build step
+          # This command maps the built image to your running K8s deployment
           kubectl set image deployment/frontend frontend=${{ secrets.SERVER_IP }}:5000/frontend:${{ github.sha }}
           kubectl set image deployment/backend backend=${{ secrets.SERVER_IP }}:5000/backend:${{ github.sha }}
-          kubectl set image deployment/database database=${{ secrets.SERVER_IP }}:5000/database:${{ github.sha }}
+          kubectl set image deployment/worker worker=${{ secrets.SERVER_IP }}:5000/worker:${{ github.sha }}
