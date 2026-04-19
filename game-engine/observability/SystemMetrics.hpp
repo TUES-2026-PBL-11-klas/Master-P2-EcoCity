@@ -25,7 +25,7 @@ struct ProcStat {
     long long wallMs;
 };
 
-ProcStat readProcStat() {
+inline ProcStat readProcStat() {
     ProcStat s{};
 
     #ifdef _WIN32
@@ -52,7 +52,7 @@ ProcStat readProcStat() {
     return s;
 }
 
-SystemMetrics readSystemMetrics(const ProcStat& prev, const ProcStat& curr)
+inline SystemMetrics readSystemMetrics(const ProcStat& prev, const ProcStat& curr)
 {
     SystemMetrics metrics{};
 
@@ -88,9 +88,9 @@ SystemMetrics readSystemMetrics(const ProcStat& prev, const ProcStat& curr)
         std::string line;
         while (std::getline(status, line)) {
             if (line.rfind("VmRSS:", 0) == 0)
-                m.memUsedKB = std::stol(line.substr(6));
+                metrics.memUsedKB = std::stol(line.substr(6));
             if (line.rfind("Threads:", 0) == 0)
-                m.threadCount = std::stoi(line.substr(8));
+                metrics.threadCount = std::stoi(line.substr(8));
         }
     #endif
 
