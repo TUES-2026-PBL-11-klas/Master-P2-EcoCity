@@ -64,3 +64,10 @@ cmake_install.cmake
 *.pdb
 *.ilk
 *.exe
+
+game-engine/eco_city_engine
+game-engine/tests/GameServiceTest
+game-engine/tests/PetitionManagerTest
+game-engine/tests/ResourceManagerTest
+game-engine/NUL
+game-engine/build/*

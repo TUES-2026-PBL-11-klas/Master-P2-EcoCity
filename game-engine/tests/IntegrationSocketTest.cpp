@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 
 #include "../network/SocketServer.hpp"
-#include "../api_types.pb.h"
+#include "api_types.pb.h"
 #include "../domain/ResourceType.hpp"
 #include "../domain/BuildingType.hpp"
 
