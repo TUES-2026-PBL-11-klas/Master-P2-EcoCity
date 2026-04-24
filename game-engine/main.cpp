@@ -90,7 +90,7 @@ int main() {
     const std::string mongoConnectionString = "mongodb://localhost:27017/";
     const std::string databaseName = "Eco_city_game";
     const std::string gameId = "local_game";
-    const int uiPort = 54321;
+    const int uiPort = 7777;
 
     ResourceManager resourceManager;
     PetitionManager petitionManager;
