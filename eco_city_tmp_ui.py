@@ -224,7 +224,7 @@ def encode_ui_action(accept: Optional[bool] = None, save: bool = False) -> bytes
 
 
 HOST = "127.0.0.1"
-PORT = 54321
+PORT = 7777
 RECONNECT_DELAY = 2.0
 
 
@@ -461,9 +461,6 @@ def render(stdscr, conn: GameConnection, flash_msg: list):
 
         safe_addstr(stdscr, row_y + i, col1_x + 25,
                     f"{ramount:>10,}", cp(rclr) | curses.A_BOLD)
-
-    safe_addstr(stdscr, 7, col1_x + 2,
-                "(live resource updates)", cp("dim") | curses.A_DIM)
 
     # Buildings panel
     bld_start_y = 3 + panel_h + 1

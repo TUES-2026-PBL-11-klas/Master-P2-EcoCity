@@ -3,7 +3,7 @@
 
 #include <optional>
 
-#include "../api_types.pb.h"
+#include "api_types.pb.h"
 
 class ISocketServer {
     public:

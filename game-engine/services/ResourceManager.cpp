@@ -43,7 +43,7 @@ int ResourceManager::getIndexForResourceType(ResourceType type) const
     return idx;
 }
 
-void ResourceManager::tick(const std::string& traceId="")
+void ResourceManager::tick(const std::string& traceId)
 {
     LOG_INFO("ResourceManager", "tick_start", "trace_id=" + traceId);
 

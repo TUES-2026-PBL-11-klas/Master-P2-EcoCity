@@ -8,7 +8,7 @@
 #include <string>
 #include <optional>
 
-#include "../api_types.pb.h"
+#include "api_types.pb.h"
 #include "ISocketServer.hpp"
 
 class SocketServer : public ISocketServer {
