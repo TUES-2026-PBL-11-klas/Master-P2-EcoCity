@@ -43,12 +43,15 @@
 UI/target/*
 game-engine/logs/*
 game-engine/metrics/*
+game-engine/eco_city_engine
+game-engine/tests/GameServiceTest
+game-engine/tests/PetitionManagerTest
+game-engine/tests/ResourceManagerTest
+game-engine/NUL
+game-engine/build/*
 
 .vscode/*
 .venv/*
-
-# CMake build output
-build/
 
 # CMake generated files that might appear at root level
 CMakeCache.txt
@@ -58,16 +61,3 @@ cmake_install.cmake
 # Generated protobuf files (regenerated at build time)
 *.pb.cc
 *.pb.h
-
-# MSVC artifacts
-*.obj
-*.pdb
-*.ilk
-*.exe
-
-game-engine/eco_city_engine
-game-engine/tests/GameServiceTest
-game-engine/tests/PetitionManagerTest
-game-engine/tests/ResourceManagerTest
-game-engine/NUL
-game-engine/build/*

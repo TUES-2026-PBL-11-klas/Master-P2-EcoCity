@@ -1,0 +1,13 @@
+*
+
+!game_api/
+
+!game-engine/
+
+game-engine/build/
+game-engine/tests/ResourceManagerTest
+game-engine/tests/PetitionManagerTest
+game-engine/tests/GameServiceTest
+game-engine/*.o
+game-engine/*.pb.cc
+game-engine/*.pb.h

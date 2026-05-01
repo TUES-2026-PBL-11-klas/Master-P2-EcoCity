@@ -1,5 +1,11 @@
 #include "Building.hpp"
 
+/*Liskov Substitution Principle - Building is an abstract base class, and all the specific 
+building types will inherit from it and implement the Effects() method.  
+This way, any code that works with Building can work with any specific building 
+type without caring about the details, and we can add new building types without changing 
+existing code.
+*/
 Building::Building(enum BuildingType type, LLint buildCost, int ticksToComplete)
 : type(type), buildCost(buildCost), ticksToComplete(ticksToComplete) {}
 
